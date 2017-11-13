@@ -5,9 +5,16 @@ import cv2
 import Person
 import time
 import os
+import Transform
+from keras.preprocessing import image
+from keras.applications.vgg19 import VGG19
+from keras.applications.vgg19 import preprocess_input
+from keras.models import Model
+import matplotlib.pyplot as plt
+from scipy import spatial
 
 if __name__ == '__main__':
-#Contadores de entrada y salida
+    transform = Transform.Transform
     cnt_up   = 0
     cnt_down = 0
     
@@ -55,7 +62,7 @@ if __name__ == '__main__':
     pts_L4 = pts_L4.reshape((-1,1,2))
     
     #background substraction - rozpoznawanie elementow ruszajacych sie
-    fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold = 50, detectShadows = False)
+    fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold = 500, detectShadows = False)
     
     #Elementos estructurantes para filtros morfoogicos
     kernelOp = np.ones((3,3),np.uint8)
@@ -109,16 +116,19 @@ if __name__ == '__main__':
                     for i in persons:
                         
                         cropped = frame[y:y+h, x:x+w]
+                        vector = transform.transform(cropped)
+                        persons[i].addVector(vector)
                         
-                        dir_path = "../out/person%s" % person_count;
-                        if not os.path.exists(dir_path):
-                            os.makedirs(dir_path)
                         
-                        cv2.imwrite("../out/person%s/img%s.png" % (person_count, img_counter), cropped)
-                        img_counter += 1  
+#                         dir_path = "../out/person%s" % person_count;
+#                         if not os.path.exists(dir_path):
+#                             os.makedirs(dir_path)
+#                         
+#                         cv2.imwrite("../out/person%s/img%s.png" % (person_count, img_counter), img)
+#                         img_counter += 1  
                         
                         now = int(time.strftime('%S'))
-                        print(now, " ", i.getLastTime())
+#                        print(now, " ", i.getLastTime())
                         if abs(cx-i.getX()) <= w and abs(cy-i.getY()) <= h and abs(now-int(i.getLastTime())) <= 2:
                             # el objeto esta cerca de uno que ya se detecto antes
                                                                                    

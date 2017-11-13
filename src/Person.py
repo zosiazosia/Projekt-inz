@@ -20,6 +20,8 @@ class MyPerson:
         self.vectors = []
     def getRGB(self):
         return (self.R,self.G,self.B)
+    def addVector(self, vector):
+        self.vectors.append(vector)
     def getTracks(self):
         return self.tracks
     def getVectors(self):
@@ -47,7 +49,7 @@ class MyPerson:
     def timedOut(self):
         return self.done
     def going_UP(self,mid_start,mid_end):
-        if len(self.tracks) >= 2:
+        if len(self.tracks) >= 5:
             if self.state == '0':
                 if self.tracks[-1][1] < mid_end and self.tracks[-2][1] >= mid_end: #cruzo la linea
                     state = '1'
@@ -58,7 +60,7 @@ class MyPerson:
         else:
             return False
     def going_DOWN(self,mid_start,mid_end):
-        if len(self.tracks) >= 2:
+        if len(self.tracks) >= 5:
             if self.state == '0':
                 if self.tracks[-1][1] > mid_start and self.tracks[-2][1] <= mid_start: #cruzo la linea
                     state = '1'
