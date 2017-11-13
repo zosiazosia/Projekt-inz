@@ -10,8 +10,8 @@ from scipy import spatial
 base_model = VGG19(weights='imagenet')
 model = Model(inputs=base_model.input, outputs=base_model.get_layer('block4_pool').output)
 
-dirInS = './Img/'
-dirToClassifyS = './ImgN/'
+dirInS = '../out/'
+dirToClassifyS = '../ImgN/'
 dirIn = os.fsencode(dirInS)
 dirToClassify = os.fsencode(dirToClassifyS)
 #tablica do przechowywania wektorów zdjęć

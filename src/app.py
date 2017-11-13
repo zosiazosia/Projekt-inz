@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 import Person
 import time
-
+import os
 
 if __name__ == '__main__':
 #Contadores de entrada y salida
@@ -12,30 +12,25 @@ if __name__ == '__main__':
     cnt_down = 0
     
     #wczytanie filmu
-  #  cap = cv2.VideoCapture(0)
-    cap = cv2.VideoCapture('mov/IMG_1668.MOV')
-  #  cap = cv2.VideoCapture('v7.mp4')
-    
-    #Propiedades del video
-    ##cap.set(3,160) #Width
-    ##cap.set(4,120) #Height
-    
-    #
+    cap = cv2.VideoCapture('../mov/gorka.MOV')
     for i in range(19):
         print (i, cap.get(i))
     
     w = cap.get(3)
     h = cap.get(4)
     frameArea = h*w
-    areaTH = frameArea/10#frameArea/250
+    areaTH = frameArea/20#frameArea/250
+    areaMaxTH = frameArea/2;
+    areaMaxWidth = w/2;
+    areaMaxHeight = h/2;
     print ('Area Threshold', areaTH)
     
     #rysowanie linii
-    line_up = int(2*(h/5))
-    line_down   = int(3*(h/5))
+    line_up = int(1.5*(h/5))
+    line_down   = int(4*(h/5))
     
     up_limit =   int(1*(h/5))
-    down_limit = int(4*(h/5))
+    down_limit = int(4.5*(h/5))
     
     print ("Red line y:",str(line_down))
     print ("Blue line y:", str(line_up))
@@ -60,7 +55,7 @@ if __name__ == '__main__':
     pts_L4 = pts_L4.reshape((-1,1,2))
     
     #background substraction - rozpoznawanie elementow ruszajacych sie
-    fgbg = cv2.createBackgroundSubtractorMOG2(detectShadows = True)
+    fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold = 50, detectShadows = False)
     
     #Elementos estructurantes para filtros morfoogicos
     kernelOp = np.ones((3,3),np.uint8)
@@ -73,32 +68,18 @@ if __name__ == '__main__':
     max_p_age = 5
     pid = 1
     img_counter = 0
+    person_count = 0
     while(cap.isOpened()):
-    ##for image in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
-        #Lee una imagen de la fuente de video
         ret, frame = cap.read()
-    ##    frame = image.array
     
         for i in persons:
             i.age_one() #age every person one frame
-        #########################
-        #   PRE-PROCESAMIENTO   #
-        #########################
         
-        #Aplica substraccion de fondo
-        fgmask = fgbg.apply(frame)
-        fgmask2 = fgbg.apply(frame)
-    
-        #Binariazcion para eliminar sombras (color gris)
+        fgmask = fgbg.apply(frame)    
         try:
             ret,imBin= cv2.threshold(fgmask,200,255,cv2.THRESH_BINARY)
-            ret,imBin2 = cv2.threshold(fgmask2,200,255,cv2.THRESH_BINARY)
-            #Opening (erode->dilate) para quitar ruido.
             mask = cv2.morphologyEx(imBin, cv2.MORPH_OPEN, kernelOp)
-            mask2 = cv2.morphologyEx(imBin2, cv2.MORPH_OPEN, kernelOp)
-            #Closing (dilate -> erode) para juntar regiones blancas.
             mask =  cv2.morphologyEx(mask , cv2.MORPH_CLOSE, kernelCl)
-            mask2 = cv2.morphologyEx(mask2, cv2.MORPH_CLOSE, kernelCl)
         except:
             print('EOF')
             print('UP:',cnt_up)
@@ -109,62 +90,38 @@ if __name__ == '__main__':
         #################
         
         # RETR_EXTERNAL returns only extreme outer flags. All child contours are left behind.
-        _, contours0, hierarchy = cv2.findContours(mask2,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+        _, contours0, hierarchy = cv2.findContours(mask,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
         for cnt in contours0:
             area = cv2.contourArea(cnt)
-            if area > areaTH:
+            x,y,w,h = cv2.boundingRect(cnt)
+            if area > areaTH and area < areaMaxTH and h<w:
                 #################
                 #   TRACKING    #
                 #################
                 
                 #Falta agregar condiciones para multipersonas, salidas y entradas de pantalla.
-                #O CO CHODZI Z MOMENTAMI ????
                 M = cv2.moments(cnt)
                 cx = int(M['m10']/M['m00'])
                 cy = int(M['m01']/M['m00'])
-                rect = cv2.minAreaRect(cnt)
-                box = cv2.boxPoints(rect)
-                box = np.int0(box)
-                cv2.drawContours(frame,[box],0,(0,0,255),2)
-                x,y,w,h = cv2.boundingRect(cnt)
-                
                
                 new = True
                 if cy in range(up_limit,down_limit):
                     for i in persons:
                         
-                        W = rect[1][0]
-                        H = rect[1][1]
+                        cropped = frame[y:y+h, x:x+w]
                         
-                        Xs = [i[0] for i in box]
-                        Ys = [i[1] for i in box]
-                        x1 = min(Xs)
-                        x2 = max(Xs)
-                        y1 = min(Ys)
-                        y2 = max(Ys)
+                        dir_path = "../out/person%s" % person_count;
+                        if not os.path.exists(dir_path):
+                            os.makedirs(dir_path)
                         
-                        angle = rect[2]
-                        if angle < -45:
-                            angle += 90
+                        cv2.imwrite("../out/person%s/img%s.png" % (person_count, img_counter), cropped)
+                        img_counter += 1  
                         
-                        # Center of rectangle in source image
-                        center = ((x1+x2)/2,(y1+y2)/2)
-                        # Size of the upright rectangle bounding the rotated rectangle
-                        size = (x2-x1, y2-y1)
-                        M = cv2.getRotationMatrix2D((size[0]/2, size[1]/2), angle, 1.0)
-                        # Cropped upright rectangle
-                        cropped = cv2.getRectSubPix(frame, size, center)
-                        cropped = cv2.warpAffine(cropped, M, size)
-                        croppedW = H if H > W else W
-                        croppedH = H if H < W else W
-                        # Final cropped & rotated rectangle
-                        croppedRotated = cv2.getRectSubPix(cropped, (int(croppedW),int(croppedH)), (size[0]/2, size[1]/2))
-                        
-                        
-                        cv2.imwrite("out/img%s.png" % img_counter, croppedRotated)
-                        img_counter += 1
-                        if abs(cx-i.getX()) <= w and abs(cy-i.getY()) <= h:
+                        now = int(time.strftime('%S'))
+                        print(now, " ", i.getLastTime())
+                        if abs(cx-i.getX()) <= w and abs(cy-i.getY()) <= h and abs(now-int(i.getLastTime())) <= 2:
                             # el objeto esta cerca de uno que ya se detecto antes
+                                                                                   
                             new = False
                             i.updateCoords(cx,cy)   #actualiza coordenadas en el objeto and resets age
                             if i.going_UP(line_down,line_up) == True:
@@ -184,10 +141,17 @@ if __name__ == '__main__':
                             index = persons.index(i)
                             persons.pop(index)
                             del i     #liberar la memoria de i
+                                 
+                                     
+                        
                     if new == True:
                         p = Person.MyPerson(pid,cx,cy, max_p_age)
                         persons.append(p)
-                        pid += 1     
+                        pid += 1 
+                        person_count += 1    
+                        
+                             
+                        
                 #################
                 #   DIBUJOS     #
                 #################

@@ -16,10 +16,14 @@ class MyPerson:
         self.age = 0
         self.max_age = max_age
         self.dir = None
+        self.lastTime = int(time.strftime("%S"))
+        self.vectors = []
     def getRGB(self):
         return (self.R,self.G,self.B)
     def getTracks(self):
         return self.tracks
+    def getVectors(self):
+        return self.vectors
     def getId(self):
         return self.i
     def getState(self):
@@ -35,6 +39,9 @@ class MyPerson:
         self.tracks.append([self.x,self.y])
         self.x = xn
         self.y = yn
+        self.lastTime = int(time.strftime("%S"))
+    def getLastTime(self):
+        return self.lastTime
     def setDone(self):
         self.done = True
     def timedOut(self):
