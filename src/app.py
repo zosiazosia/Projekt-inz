@@ -28,7 +28,8 @@ if __name__ == '__main__':
                                    "../caffe/MobileNetSSD_deploy.caffemodel")
 
     #wczytanie filmu
-    cap = cv2.VideoCapture('../mov/IMG_1652.MOV')
+    cap = cv2.VideoCapture('../mov/kate3.mp4')
+    #    cap = cv2.VideoCapture('../mov/IMG_1652.MOV')
     # cap = cv2.VideoCapture(0)
     for i in range(19):
         print (i, cap.get(i))
@@ -48,8 +49,8 @@ if __name__ == '__main__':
     #
     # up_limit =   int(1*(h/5))
     # down_limit = int(4.5*(h/5))
-    line_left = int(2 * (w / 5))
-    line_right = int(3 * (w / 5))
+    line_left = int(1.5 * (w / 5))
+    line_right = int(3.5 * (w / 5))
 
     up_limit = int(1 * (w / 5))
     down_limit = int(4 * (w / 5))
@@ -76,14 +77,6 @@ if __name__ == '__main__':
     pts_L4 = np.array([pt7,pt8], np.int32)
     pts_L4 = pts_L4.reshape((-1,1,2))
 
-    # #background substraction - rozpoznawanie elementow ruszajacych sie
-    # fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold = 500, detectShadows = False)
-    #
-    # #Elementos estructurantes para filtros morfoogicos
-    # kernelOp = np.ones((3,3),np.uint8)
-    # kernelOp2 = np.ones((5,5),np.uint8)
-    # kernelCl = np.ones((11,11),np.uint8)
-    
     #Variables
     font = cv2.FONT_HERSHEY_SIMPLEX
     persons = []
@@ -91,9 +84,12 @@ if __name__ == '__main__':
     pid = 1
     img_counter = 0
     person_count = 0
+    frame_num = 0
     while(cap.isOpened()):
         ret, frame = cap.read()
-
+        frame_num += 1
+        if (frame_num % 3):
+            continue;
         (h1, w1) = frame.shape[:2]
         blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 0.007843, (300, 300), 127.5)
         net.setInput(blob)
@@ -104,13 +100,13 @@ if __name__ == '__main__':
             # prediction
             confidence = detections[0, 0, i, 2]
 
+            idx = int(detections[0, 0, i, 1])  # idx = 15 dla person
             # filter out weak detections by ensuring the `confidence` is
             # greater than the minimum confidence
-            if confidence > 0.5:
+            if confidence > 0.2 and idx == 15:
                 # extract the index of the class label from the `detections`,
                 # then compute the (x, y)-coordinates of the bounding box for
                 # the object
-                idx = int(detections[0, 0, i, 1])
                 box = detections[0, 0, i, 3:7] * np.array([w1, h1, w1, h1])
                 (startX, startY, endX, endY) = box.astype("int")
 
@@ -126,52 +122,29 @@ if __name__ == '__main__':
                 for i in persons:
                     i.age_one()  # age every person one frame
 
-                #         fgmask = fgbg.apply(frame)
-                #         try:
-                #             ret,imBin= cv2.threshold(fgmask,200,255,cv2.THRESH_BINARY)
-                #             mask = cv2.morphologyEx(imBin, cv2.MORPH_OPEN, kernelOp)
-                #             mask =  cv2.morphologyEx(mask , cv2.MORPH_CLOSE, kernelCl)
-                #         except:
-                #             print('EOF')
-                #             print('UP:',cnt_up)
-                #             print('DOWN:',cnt_down)
-                #             break
-                #         #################
-                #         #   CONTORNOS   #
-                #         #################
-                #
-                #         # RETR_EXTERNAL returns only extreme outer flags. All child contours are left behind.
-                #         _, contours0, hierarchy = cv2.findContours(mask,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-                #         for cnt in contours0:
-                #             area = cv2.contourArea(cnt)
-                #             x,y,w,h = cv2.boundingRect(cnt)
-                #             if area > areaTH and area < areaMaxTH and h<w:
-                #################
-                #   TRACKING    #
-                #################
-
-                M = cv2.moments(box)
-                cx = int(M['m10']/M['m00'])
-                cy = int(M['m01']/M['m00'])
+                cx = int((endX - startX) / 2 + startX)
+                cy = int((endY - startY) / 2 + startY)
 
                 new = True
-                if cy in range(up_limit,down_limit):
+                if cx in range(up_limit, down_limit):
                     for i in persons:
 
-                        vector = transform.transform(box)
-                        persons[i].addVector(vector)
-
-
-#                         dir_path = "../out/person%s" % person_count;
-#                         if not os.path.exists(dir_path):
-#                             os.makedirs(dir_path)
-#
-#                         cv2.imwrite("../out/person%s/img%s.png" % (person_count, img_counter), img)
-                        #                         img_counter += 1
+                        # vector = transform.transform(img)
+                        # persons[i].addVector(vector)
 
                         now = int(time.strftime('%S'))
-#                        print(now, " ", i.getLastTime())
-                        if abs(cx-i.getX()) <= w and abs(cy-i.getY()) <= h and abs(now-int(i.getLastTime())) <= 2:
+                        if abs(cx - i.getX()) <= 100 and abs(
+                                        cy - i.getY()) <= 100:  # and (abs(now-int(i.getLastTime())) <= 2 or abs(now-int(i.getLastTime())) >= 58):
+
+                            img = frame[startY:endY, startX:endX]
+                            label = "cx%d cy%d" % (cx, cy)
+                            cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+                            dir_path = "../out/person%s" % person_count;
+                            if not os.path.exists(dir_path):
+                                os.makedirs(dir_path)
+
+                            cv2.imwrite("../out/person%s/img%s.png" % (person_count, img_counter), img)
+                            img_counter += 1
 
                             new = False
                             i.updateCoords(cx,cy)   #actualiza coordenadas en el objeto and resets age
@@ -198,28 +171,18 @@ if __name__ == '__main__':
                         persons.append(p)
                         pid += 1
                         person_count += 1
+                        img = frame[startY:endY, startX:endX]
+                        label = "cx%d cy%d" % (cx, cy)
+                        cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx + 1], 2)
+                        dir_path = "../out/person%s" % person_count;
+                        if not os.path.exists(dir_path):
+                            os.makedirs(dir_path)
 
-                    #
-                    #
-                    #                 #################
-                    #                 #   DIBUJOS     #
-                    #                 #################
-                    #                 cv2.circle(frame,(cx,cy), 5, (0,0,255), -1)
-                    #                 img = cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2)
-                    #                 #cv2.drawContours(frame, cnt, -1, (0,255,0), 3)
-                    #
-                    #         #END for cnt in contours0
-                    #
-                    #         #########################
-                    #         # DIBUJAR TRAYECTORIAS  #
-                    #         #########################
+                        cv2.imwrite("../out/person%s/img%s.png" % (person_count, img_counter), img)
+                        img_counter += 1
+
+                    cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
         for i in persons:
-    ##        if len(i.getTracks()) >= 2:
-    ##            pts = np.array(i.getTracks(), np.int32)
-    ##            pts = pts.reshape((-1,1,2))
-    ##            frame = cv2.polylines(frame,[pts],False,i.getRGB())
-    ##        if i.getId() == 9:
-    ##            print str(i.getX()), ',', str(i.getY())
             cv2.putText(frame, str(i.getId()), (i.getX(),i.getY()), font, 0.3, i.getRGB(), 1, cv2.LINE_AA)
 
         #################
@@ -243,10 +206,5 @@ if __name__ == '__main__':
         k = cv2.waitKey(30) & 0xff
         if k == 27:
             break
-    #END while(cap.isOpened())
-        
-    #################
-    #   LIMPIEZA    #
-    #################
     cap.release()
     cv2.destroyAllWindows()
