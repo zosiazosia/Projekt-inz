@@ -42,29 +42,36 @@ class MyPerson:
         self.x = xn
         self.y = yn
         self.lastTime = int(time.strftime("%S"))
+        if len(self.tracks) >= 2:
+            if self.tracks[-2][0] < self.tracks[-1][0]:
+                self.dir = 'left'
+            else:
+                self.dir = 'right'
     def getLastTime(self):
         return self.lastTime
     def setDone(self):
         self.done = True
     def timedOut(self):
         return self.done
-    def going_UP(self,mid_start,mid_end):
-        if len(self.tracks) >= 5:
+
+    def going_LEFT(self, mid_end):
+        if len(self.tracks) >= 3:
             if self.state == '0':
-                if self.tracks[-1][1] < mid_end and self.tracks[-2][1] >= mid_end: #cruzo la linea
+                if self.tracks[-1][0] < mid_end and self.tracks[-2][0] >= mid_end:  # cruzo la linea
                     state = '1'
-                    self.dir = 'up'
+                    self.dir = 'left'
                     return True
             else:
                 return False
         else:
             return False
-    def going_DOWN(self,mid_start,mid_end):
-        if len(self.tracks) >= 5:
+
+    def going_RIGHT(self, mid_start):
+        if len(self.tracks) >= 3:
             if self.state == '0':
-                if self.tracks[-1][1] > mid_start and self.tracks[-2][1] <= mid_start: #cruzo la linea
+                if self.tracks[-1][0] > mid_start and self.tracks[-2][0] <= mid_start:  #cruzo la linea
                     state = '1'
-                    self.dir = 'down'
+                    self.dir = 'right'
                     return True
             else:
                 return False
@@ -75,14 +82,14 @@ class MyPerson:
         if self.age > self.max_age:
             self.done = True
         return True
-class MultiPerson:
-    def __init__(self, persons, xi, yi):
-        self.persons = persons
-        self.x = xi
-        self.y = yi
-        self.tracks = []
-        self.R = randint(0,255)
-        self.G = randint(0,255)
-        self.B = randint(0,255)
-        self.done = False
-        
+        # class MultiPerson:
+        #     def __init__(self, persons, xi, yi):
+        #         self.persons = persons
+        #         self.x = xi
+        #         self.y = yi
+        #         self.tracks = []
+        #         self.R = randint(0,255)
+        #         self.G = randint(0,255)
+        #         self.B = randint(0,255)
+        #         self.done = False
+        #

@@ -1,5 +1,3 @@
-##Contador de personas
-##Federico Mejia
 import numpy as np
 import cv2
 import Person
@@ -28,7 +26,7 @@ if __name__ == '__main__':
                                    "../caffe/MobileNetSSD_deploy.caffemodel")
 
     #wczytanie filmu
-    cap = cv2.VideoCapture('../mov/kate3.mp4')
+    cap = cv2.VideoCapture('../mov/kate4.mp4')
     #    cap = cv2.VideoCapture('../mov/IMG_1652.MOV')
     # cap = cv2.VideoCapture(0)
     for i in range(19):
@@ -44,16 +42,11 @@ if __name__ == '__main__':
     print ('Area Threshold', areaTH)
 
     # #rysowanie linii
-    # line_up = int(1.5*(h/5))
-    # line_down   = int(4*(h/5))
-    #
-    # up_limit =   int(1*(h/5))
-    # down_limit = int(4.5*(h/5))
     line_left = int(1.5 * (w / 5))
-    line_right = int(3.5 * (w / 5))
+    line_right = int(2.5 * (w / 5))
 
-    up_limit = int(1 * (w / 5))
-    down_limit = int(4 * (w / 5))
+    left_limit = int(1 * (w / 5))
+    right_limit = int(3 * (w / 5))
 
     print("Red line y:", str(line_right))
     print("Blue line y:", str(line_left))
@@ -68,12 +61,12 @@ if __name__ == '__main__':
     pts_L2 = np.array([pt3,pt4], np.int32)
     pts_L2 = pts_L2.reshape((-1,1,2))
 
-    pt5 = [up_limit, 0];
-    pt6 = [up_limit, h];
+    pt5 = [left_limit, 0];
+    pt6 = [left_limit, h];
     pts_L3 = np.array([pt5,pt6], np.int32)
     pts_L3 = pts_L3.reshape((-1,1,2))
-    pt7 = [down_limit, 0];
-    pt8 = [down_limit, h];
+    pt7 = [right_limit, 0];
+    pt8 = [right_limit, h];
     pts_L4 = np.array([pt7,pt8], np.int32)
     pts_L4 = pts_L4.reshape((-1,1,2))
 
@@ -83,13 +76,13 @@ if __name__ == '__main__':
     max_p_age = 5
     pid = 1
     img_counter = 0
-    person_count = 0
     frame_num = 0
     while(cap.isOpened()):
         ret, frame = cap.read()
-        frame_num += 1
-        if (frame_num % 3):
-            continue;
+
+        # frame_num += 1
+        # if (frame_num % 2):
+        #     continue;
         (h1, w1) = frame.shape[:2]
         blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 0.007843, (300, 300), 127.5)
         net.setInput(blob)
@@ -103,7 +96,7 @@ if __name__ == '__main__':
             idx = int(detections[0, 0, i, 1])  # idx = 15 dla person
             # filter out weak detections by ensuring the `confidence` is
             # greater than the minimum confidence
-            if confidence > 0.2 and idx == 15:
+            if confidence > 0.3 and idx == 15:
                 # extract the index of the class label from the `detections`,
                 # then compute the (x, y)-coordinates of the bounding box for
                 # the object
@@ -112,9 +105,8 @@ if __name__ == '__main__':
 
                 # display the prediction
                 label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
-                print("[INFO] {}".format(label))
-                cv2.rectangle(frame, (startX, startY), (endX, endY),
-                              COLORS[idx], 2)
+                # print("[INFO] {}".format(label))
+                cv2.rectangle(frame, (startX, startY), (endX, endY), COLORS[idx], 2)
                 y = startY - 15 if startY - 15 > 15 else startY + 15
                 cv2.putText(frame, label, (startX, y),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
@@ -126,70 +118,61 @@ if __name__ == '__main__':
                 cy = int((endY - startY) / 2 + startY)
 
                 new = True
-                if cx in range(up_limit, down_limit):
-                    for i in persons:
+                if cx in range(left_limit, right_limit):
+                    for p in persons:
 
+                        # img = frame[startY:endY, startX:endX]
                         # vector = transform.transform(img)
-                        # persons[i].addVector(vector)
+                        # p.addVector(vector)
 
                         now = int(time.strftime('%S'))
-                        if abs(cx - i.getX()) <= 100 and abs(
-                                        cy - i.getY()) <= 100:  # and (abs(now-int(i.getLastTime())) <= 2 or abs(now-int(i.getLastTime())) >= 58):
+                        if abs(cx - p.getX()) <= 150 and abs(cy - p.getY()) <= 100 and (
+                                abs(now - int(p.getLastTime())) <= 4 or abs(now - int(p.getLastTime())) >= 55):
 
                             img = frame[startY:endY, startX:endX]
-                            label = "cx%d cy%d" % (cx, cy)
+                            label = "cx%d cy%d time: %d" % (cx, cy, p.getLastTime())
                             cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
-                            dir_path = "../out/person%s" % person_count;
-                            if not os.path.exists(dir_path):
-                                os.makedirs(dir_path)
-
-                            cv2.imwrite("../out/person%s/img%s.png" % (person_count, img_counter), img)
+                            id = '%d' % p.getId()
+                            cv2.putText(frame, id, (cx + 2, cy), cv2.FONT_HERSHEY_SIMPLEX, 3, COLORS[idx], 2)
+                            # dir_path = "../out/person%s" % person_count;
+                            # if not os.path.exists(dir_path):
+                            #     os.makedirs(dir_path)
+                            id = p.getId()
+                            cv2.imwrite("../out/person%d-%d.png" % (id, img_counter), img)
                             img_counter += 1
 
                             new = False
-                            i.updateCoords(cx,cy)   #actualiza coordenadas en el objeto and resets age
-                            if i.going_UP(line_right, line_left) == True:
+                            p.updateCoords(cx, cy)  # actualiza coordenadas en el objeto and resets age
+                            if p.going_LEFT(line_left) == True:
                                 cnt_up += 1;
-                                print ("ID:", i.getId(),'crossed going up at', time.strftime("%c"))
-                            elif i.going_DOWN(line_right, line_left) == True:
+                                print("ID:", p.getId(), 'crossed going up at', time.strftime("%c"))
+                            elif p.going_RIGHT(line_right) == True:
                                 cnt_down += 1;
-                                print ("ID:",i.getId(),'crossed going down at',time.strftime("%c"))
+                                print("ID:", p.getId(), 'crossed going down at', time.strftime("%c"))
                             break
-                        if i.getState() == '1':
-                            if i.getDir() == 'down' and i.getY() > down_limit:
-                                i.setDone()
-                            elif i.getDir() == 'up' and i.getY() < up_limit:
-                                i.setDone()
-                        if i.timedOut():
+                        if p.getState() == '1':
+                            if p.getDir() == 'right' and p.getY() > right_limit:
+                                p.setDone()
+                            elif p.getDir() == 'left' and p.getY() < left_limit:
+                                p.setDone()
+                        if p.timedOut():
                             #sacar i de la lista persons
-                            index = persons.index(i)
+                            index = persons.index(p)
                             persons.pop(index)
-                            del i     #liberar la memoria de i
+                            del p  #liberar la memoria de i
 
                     if new == True:
-                        p = Person.MyPerson(pid,cx,cy, max_p_age)
-                        persons.append(p)
+                        pers = Person.MyPerson(pid, cx, cy, max_p_age)
+                        persons.append(pers)
+                        img_counter = 0
                         pid += 1
-                        person_count += 1
-                        img = frame[startY:endY, startX:endX]
-                        label = "cx%d cy%d" % (cx, cy)
-                        cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx + 1], 2)
-                        dir_path = "../out/person%s" % person_count;
-                        if not os.path.exists(dir_path):
-                            os.makedirs(dir_path)
-
-                        cv2.imwrite("../out/person%s/img%s.png" % (person_count, img_counter), img)
-                        img_counter += 1
 
                     cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
         for i in persons:
             cv2.putText(frame, str(i.getId()), (i.getX(),i.getY()), font, 0.3, i.getRGB(), 1, cv2.LINE_AA)
 
-        #################
-        #   IMAGANES    #
-        #################
-        str_up = 'UP: '+ str(cnt_up)
-        str_down = 'DOWN: '+ str(cnt_down)
+        str_up = 'LEFT: ' + str(cnt_up)
+        str_down = 'RIGHT: ' + str(cnt_down)
         frame = cv2.polylines(frame,[pts_L1],False,line_down_color,thickness=2)
         frame = cv2.polylines(frame,[pts_L2],False,line_up_color,thickness=2)
         frame = cv2.polylines(frame,[pts_L3],False,(255,255,255),thickness=1)
@@ -200,7 +183,6 @@ if __name__ == '__main__':
         cv2.putText(frame, str_down, (10,90), font, 0.5, (255,0,0), 1, cv2.LINE_AA)
 
         cv2.imshow('Frame',frame)
-        #cv2.imshow('Mask',mask)    
         
         #preisonar ESC para salir
         k = cv2.waitKey(30) & 0xff
