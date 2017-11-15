@@ -3,7 +3,8 @@ import time
 
 class MyPerson:
     tracks = []
-    def __init__(self, i, xi, yi, max_age):
+
+    def __init__(self, i, xi, yi):
         self.i = i
         self.x = xi
         self.y = yi
@@ -13,10 +14,8 @@ class MyPerson:
         self.B = randint(0,255)
         self.done = False
         self.state = '0'
-        self.age = 0
-        self.max_age = max_age
         self.dir = None
-        self.lastTime = int(time.strftime("%S"))
+        self.lastTime = int(time.strftime("%M%S"))
         self.vectors = []
     def getRGB(self):
         return (self.R,self.G,self.B)
@@ -37,11 +36,10 @@ class MyPerson:
     def getY(self):
         return self.y
     def updateCoords(self, xn, yn):
-        self.age = 0
         self.tracks.append([self.x,self.y])
         self.x = xn
         self.y = yn
-        self.lastTime = int(time.strftime("%S"))
+        self.lastTime = int(time.strftime("%M%S"))
         if len(self.tracks) >= 2:
             if self.tracks[-2][0] < self.tracks[-1][0]:
                 self.dir = 'left'
@@ -51,7 +49,8 @@ class MyPerson:
         return self.lastTime
     def setDone(self):
         self.done = True
-    def timedOut(self):
+
+    def getDone(self):
         return self.done
 
     def going_LEFT(self, mid_end):
@@ -77,19 +76,3 @@ class MyPerson:
                 return False
         else:
             return False
-    def age_one(self):
-        self.age += 1
-        if self.age > self.max_age:
-            self.done = True
-        return True
-        # class MultiPerson:
-        #     def __init__(self, persons, xi, yi):
-        #         self.persons = persons
-        #         self.x = xi
-        #         self.y = yi
-        #         self.tracks = []
-        #         self.R = randint(0,255)
-        #         self.G = randint(0,255)
-        #         self.B = randint(0,255)
-        #         self.done = False
-        #

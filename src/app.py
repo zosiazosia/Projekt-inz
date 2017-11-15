@@ -5,12 +5,6 @@ import time
 import os
 import Transform
 import Counter
-from keras.preprocessing import image
-from keras.applications.vgg19 import VGG19
-from keras.applications.vgg19 import preprocess_input
-from keras.models import Model
-import matplotlib.pyplot as plt
-from scipy import spatial
 
 if __name__ == '__main__':
     transform = Transform.Transform
@@ -26,9 +20,9 @@ if __name__ == '__main__':
                                    "../caffe/MobileNetSSD_deploy.caffemodel")
 
     #wczytanie filmu
-    cap = cv2.VideoCapture('../mov/kate4.mp4')
+    # cap = cv2.VideoCapture('../mov/kate3.mp4')
     #    cap = cv2.VideoCapture('../mov/IMG_1652.MOV')
-    # cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0)
     for i in range(19):
         print (i, cap.get(i))
     
@@ -73,15 +67,14 @@ if __name__ == '__main__':
     #Variables
     font = cv2.FONT_HERSHEY_SIMPLEX
     persons = []
-    max_p_age = 5
     pid = 1
     img_counter = 0
     frame_num = 0
-    while(cap.isOpened()):
+    while cap.isOpened():
         ret, frame = cap.read()
 
         # frame_num += 1
-        # if (frame_num % 2):
+        # if frame_num % 2:
         #     continue;
         (h1, w1) = frame.shape[:2]
         blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 0.007843, (300, 300), 127.5)
@@ -111,9 +104,6 @@ if __name__ == '__main__':
                 cv2.putText(frame, label, (startX, y),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
 
-                for i in persons:
-                    i.age_one()  # age every person one frame
-
                 cx = int((endX - startX) / 2 + startX)
                 cy = int((endY - startY) / 2 + startY)
 
@@ -125,9 +115,10 @@ if __name__ == '__main__':
                         # vector = transform.transform(img)
                         # p.addVector(vector)
 
-                        now = int(time.strftime('%S'))
+                        now = int(time.strftime('%M%S'))
                         if abs(cx - p.getX()) <= 150 and abs(cy - p.getY()) <= 100 and (
-                                abs(now - int(p.getLastTime())) <= 4 or abs(now - int(p.getLastTime())) >= 55):
+                                        abs(now - int(p.getLastTime())) <= 2 or abs(
+                                        now - int(p.getLastTime())) >= 5958):
 
                             img = frame[startY:endY, startX:endX]
                             label = "cx%d cy%d time: %d" % (cx, cy, p.getLastTime())
@@ -142,7 +133,7 @@ if __name__ == '__main__':
                             img_counter += 1
 
                             new = False
-                            p.updateCoords(cx, cy)  # actualiza coordenadas en el objeto and resets age
+                            p.updateCoords(cx, cy)
                             if p.going_LEFT(line_left) == True:
                                 cnt_up += 1;
                                 print("ID:", p.getId(), 'crossed going up at', time.strftime("%c"))
@@ -151,20 +142,18 @@ if __name__ == '__main__':
                                 print("ID:", p.getId(), 'crossed going down at', time.strftime("%c"))
                             break
                         if p.getState() == '1':
-                            if p.getDir() == 'right' and p.getY() > right_limit:
+                            if p.getDir() == 'right' and p.getX() > right_limit:
                                 p.setDone()
-                            elif p.getDir() == 'left' and p.getY() < left_limit:
+                            elif p.getDir() == 'left' and p.getX() < left_limit:
                                 p.setDone()
-                        if p.timedOut():
-                            #sacar i de la lista persons
+                        if p.getDone():
                             index = persons.index(p)
                             persons.pop(index)
-                            del p  #liberar la memoria de i
-
+                            del p
                     if new == True:
-                        pers = Person.MyPerson(pid, cx, cy, max_p_age)
+                        pers = Person.MyPerson(pid, cx, cy)
                         persons.append(pers)
-                        img_counter = 0
+                        # img_counter = 0
                         pid += 1
 
                     cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
