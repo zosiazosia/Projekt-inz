@@ -5,9 +5,10 @@ import time
 import os
 import Transform
 import Counter
+import Posture
 
 if __name__ == '__main__':
-    transform = Transform.Transform
+    trans = Transform.Transform(0)
     counter = Counter.Counter
     cnt_up   = 0
     cnt_down = 0
@@ -20,9 +21,9 @@ if __name__ == '__main__':
                                    "../caffe/MobileNetSSD_deploy.caffemodel")
 
     #wczytanie filmu
-    # cap = cv2.VideoCapture('../mov/kate3.mp4')
+    cap = cv2.VideoCapture('../mov/kasia.mp4')
     #    cap = cv2.VideoCapture('../mov/IMG_1652.MOV')
-    cap = cv2.VideoCapture(0)
+    # cap = cv2.VideoCapture(0)
     for i in range(19):
         print (i, cap.get(i))
     
@@ -36,11 +37,11 @@ if __name__ == '__main__':
     print ('Area Threshold', areaTH)
 
     # #rysowanie linii
-    line_left = int(1.5 * (w / 5))
-    line_right = int(2.5 * (w / 5))
+    line_left = int(2 * (w / 5))
+    line_right = int(3 * (w / 5))
 
-    left_limit = int(1 * (w / 5))
-    right_limit = int(3 * (w / 5))
+    left_limit = int(1.5 * (w / 5))
+    right_limit = int(3.5 * (w / 5))
 
     print("Red line y:", str(line_right))
     print("Blue line y:", str(line_left))
@@ -66,8 +67,9 @@ if __name__ == '__main__':
 
     #Variables
     font = cv2.FONT_HERSHEY_SIMPLEX
+    postures = []
     persons = []
-    pid = 1
+    pid = 0
     img_counter = 0
     frame_num = 0
     while cap.isOpened():
@@ -109,7 +111,7 @@ if __name__ == '__main__':
 
                 new = True
                 if cx in range(left_limit, right_limit):
-                    for p in persons:
+                    for p in postures:
 
                         # img = frame[startY:endY, startX:endX]
                         # vector = transform.transform(img)
@@ -129,6 +131,13 @@ if __name__ == '__main__':
                             # if not os.path.exists(dir_path):
                             #     os.makedirs(dir_path)
                             id = p.getId()
+
+                            if p.getVectorSaved() == False:
+                                vector = trans.transform(img)
+
+                                postures[id].addVector(vector)
+                                p.setVectorSaved(True)
+
                             cv2.imwrite("../out/person%d-%d.png" % (id, img_counter), img)
                             img_counter += 1
 
@@ -147,17 +156,24 @@ if __name__ == '__main__':
                             elif p.getDir() == 'left' and p.getX() < left_limit:
                                 p.setDone()
                         if p.getDone():
-                            index = persons.index(p)
-                            persons.pop(index)
+                            index = postures.index(p)
+                            postures.pop(index)
                             del p
                     if new == True:
-                        pers = Person.MyPerson(pid, cx, cy)
-                        persons.append(pers)
+                        pers = Posture.Posture(pid, cx, cy)
+                        postures.append(pers)
+
+                        # rebuild tree -> new posture has to be classified
+                        # if (len(persons) != 0 and len(persons) != 1):
+                        # trans.build_tree(persons)
+
+                        ps = Person.Person(pid)
+                        persons.append(ps)
                         # img_counter = 0
                         pid += 1
 
                     cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
-        for i in persons:
+        for i in postures:
             cv2.putText(frame, str(i.getId()), (i.getX(),i.getY()), font, 0.3, i.getRGB(), 1, cv2.LINE_AA)
 
         str_up = 'LEFT: ' + str(cnt_up)
