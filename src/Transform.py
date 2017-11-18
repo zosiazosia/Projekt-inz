@@ -49,7 +49,7 @@ class Transform:
     def classify(self, persons, posture, pid):
         # first person ever, nothing to classify
         if (len(persons) == 0):
-            ps = Person.Person(pid)
+            ps = Person.Person(0)
             persons.append(ps)
             ps.addVectors(posture.getVectors())
             print("tuuuuu")
@@ -59,26 +59,29 @@ class Transform:
             pers = self.tree_decide(posture.getVectors())
 
             if (pers == 'new'):
-                ps = Person.Person(pid)
+                ps = Person.Person(len(persons))
                 persons.append(ps)
                 ps.addVectors(posture.getVectors())
                 print("new")
             # add vectors to already existing person
             else:
-                persons[pers].addVectors(posture.getVectors())
                 print(pers)
+                persons[pers].addVectors(posture.getVectors())
+
 
     # img already as a transformed vector
     def tree_decide(self, img):
         # 5 nearest vectors
         # potem zmienić na samo img!!!!!!!!!!!
         dist, ind = self.tree.query(img[0], k=5)
+        print(dist, ind)
 
         # new person
-        if (dist[0] > 1000):
+        if (dist[0] > 500):
             return ("new")
         # person reidentified
         else:
+
             return self.indexes[ind[0]]
 
 
