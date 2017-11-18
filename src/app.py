@@ -7,6 +7,9 @@ import Transform
 import Counter
 import Posture
 
+# known direction, posture to classify
+
+
 if __name__ == '__main__':
     trans = Transform.Transform(0)
     counter = Counter.Counter
@@ -16,12 +19,13 @@ if __name__ == '__main__':
                "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
                "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
                "sofa", "train", "tvmonitor"]
+    PERSON = 15
     COLORS = np.random.uniform(0, 255, size=(len(CLASSES), 3))
     net = cv2.dnn.readNetFromCaffe("../caffe/MobileNetSSD_deploy.prototxt.txt",
                                    "../caffe/MobileNetSSD_deploy.caffemodel")
 
     #wczytanie filmu
-    cap = cv2.VideoCapture('../mov/kasia.mp4')
+    cap = cv2.VideoCapture('../mov/schody_2.mov')
     #    cap = cv2.VideoCapture('../mov/IMG_1652.MOV')
     # cap = cv2.VideoCapture(0)
     for i in range(19):
@@ -40,8 +44,8 @@ if __name__ == '__main__':
     line_left = int(2 * (w / 5))
     line_right = int(3 * (w / 5))
 
-    left_limit = int(1.5 * (w / 5))
-    right_limit = int(3.5 * (w / 5))
+    left_limit = int(1 * (w / 5))
+    right_limit = int(4 * (w / 5))
 
     print("Red line y:", str(line_right))
     print("Blue line y:", str(line_left))
@@ -67,14 +71,17 @@ if __name__ == '__main__':
 
     #Variables
     font = cv2.FONT_HERSHEY_SIMPLEX
-    postures = []
+    postures = []  #list of active postures
     persons = []
     pid = 0
     img_counter = 0
     frame_num = 0
+
+    #for each frame
     while cap.isOpened():
         ret, frame = cap.read()
 
+        # co druga ramka
         # frame_num += 1
         # if frame_num % 2:
         #     continue;
@@ -82,16 +89,16 @@ if __name__ == '__main__':
         blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 0.007843, (300, 300), 127.5)
         net.setInput(blob)
         detections = net.forward()
+
         # loop over the detections
         for i in np.arange(0, detections.shape[2]):
-            # extract the confidence (i.e., probability) associated with the
-            # prediction
+            # extract the confidence (i.e., probability) associated with the prediction
             confidence = detections[0, 0, i, 2]
 
             idx = int(detections[0, 0, i, 1])  # idx = 15 dla person
             # filter out weak detections by ensuring the `confidence` is
             # greater than the minimum confidence
-            if confidence > 0.3 and idx == 15:
+            if confidence > 0.3 and idx == PERSON:
                 # extract the index of the class label from the `detections`,
                 # then compute the (x, y)-coordinates of the bounding box for
                 # the object
@@ -100,22 +107,20 @@ if __name__ == '__main__':
 
                 # display the prediction
                 label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
-                # print("[INFO] {}".format(label))
                 cv2.rectangle(frame, (startX, startY), (endX, endY), COLORS[idx], 2)
                 y = startY - 15 if startY - 15 > 15 else startY + 15
                 cv2.putText(frame, label, (startX, y),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
 
+                #współrzędne środka masy
                 cx = int((endX - startX) / 2 + startX)
                 cy = int((endY - startY) / 2 + startY)
 
                 new = True
+                # detection between white lines
                 if cx in range(left_limit, right_limit):
+                    # loop over active postures
                     for p in postures:
-
-                        # img = frame[startY:endY, startX:endX]
-                        # vector = transform.transform(img)
-                        # p.addVector(vector)
 
                         now = int(time.strftime('%M%S'))
                         if abs(cx - p.getX()) <= 150 and abs(cy - p.getY()) <= 100 and (
@@ -127,48 +132,53 @@ if __name__ == '__main__':
                             cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
                             id = '%d' % p.getId()
                             cv2.putText(frame, id, (cx + 2, cy), cv2.FONT_HERSHEY_SIMPLEX, 3, COLORS[idx], 2)
-                            # dir_path = "../out/person%s" % person_count;
-                            # if not os.path.exists(dir_path):
-                            #     os.makedirs(dir_path)
+
                             id = p.getId()
 
-                            if p.getVectorSaved() == False:
+                            if p.getState() != '1':
                                 vector = trans.transform(img)
-
-                                postures[id].addVector(vector)
-                                p.setVectorSaved(True)
+                                p.addVector(vector)
+                            #postures[id].addVector(vector)
 
                             cv2.imwrite("../out/person%d-%d.png" % (id, img_counter), img)
                             img_counter += 1
 
                             new = False
-                            p.updateCoords(cx, cy)
+
+                            p.addCoords(cx, cy)
                             if p.going_LEFT(line_left) == True:
+                                trans.classify(persons, p, p.getId())
+
                                 cnt_up += 1;
                                 print("ID:", p.getId(), 'crossed going up at', time.strftime("%c"))
+
                             elif p.going_RIGHT(line_right) == True:
+                                trans.classify(persons, p, p.getId())
+
                                 cnt_down += 1;
                                 print("ID:", p.getId(), 'crossed going down at', time.strftime("%c"))
+
                             break
-                        if p.getState() == '1':
-                            if p.getDir() == 'right' and p.getX() > right_limit:
-                                p.setDone()
-                            elif p.getDir() == 'left' and p.getX() < left_limit:
-                                p.setDone()
-                        if p.getDone():
+                        # if p.getState() == '1':
+                        #     if p.getDir() == 'right' and p.getX() > right_limit:
+                        #         p.setDone()
+                        #     elif p.getDir() == 'left' and p.getX() < left_limit:
+                        #         p.setDone()
+
+                        # posture outside white space
+                        if (p.getState() == "1" or p.getX() > right_limit or p.getX() < left_limit):
                             index = postures.index(p)
                             postures.pop(index)
                             del p
                     if new == True:
-                        pers = Posture.Posture(pid, cx, cy)
-                        postures.append(pers)
+                        post = Posture.Posture(pid, cx, cy)
+                        postures.append(post)
 
                         # rebuild tree -> new posture has to be classified
-                        # if (len(persons) != 0 and len(persons) != 1):
-                        # trans.build_tree(persons)
+                        if (len(persons) != 0):
+                            trans.build_tree(persons)
 
-                        ps = Person.Person(pid)
-                        persons.append(ps)
+
                         # img_counter = 0
                         pid += 1
 

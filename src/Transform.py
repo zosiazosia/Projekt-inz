@@ -5,6 +5,7 @@ from keras.models import Model
 import numpy as np
 import cv2
 import Posture
+import Person
 import matplotlib.pyplot as plt
 import os
 from scipy import spatial
@@ -34,10 +35,10 @@ class Transform:
         return b
 
     # build tree from all currently available vectors
-    def build_tree(self, postures):
+    def build_tree(self, persons):
         tab = []
         i = 0
-        for p in postures:
+        for p in persons:
             # person = p.Posture()
             for v in p.getVectors():
                 tab.append(v)
@@ -45,10 +46,33 @@ class Transform:
 
         self.tree = spatial.KDTree(tab)
 
+    def classify(self, persons, posture, pid):
+        # first person ever, nothing to classify
+        if (len(persons) == 0):
+            ps = Person.Person(pid)
+            persons.append(ps)
+            ps.addVectors(posture.getVectors())
+            print("tuuuuu")
+
+        else:
+            # potem zmienić na przekazanie wszystkich wektorów tej postury, na razie na ostatnim
+            pers = self.tree_decide(posture.getVectors())
+
+            if (pers == 'new'):
+                ps = Person.Person(pid)
+                persons.append(ps)
+                ps.addVectors(posture.getVectors())
+                print("new")
+            # add vectors to already existing person
+            else:
+                persons[pers].addVectors(posture.getVectors())
+                print(pers)
+
     # img already as a transformed vector
-    def classify(self, img):
+    def tree_decide(self, img):
         # 5 nearest vectors
-        dist, ind = self.tree.query(img, k=5)
+        # potem zmienić na samo img!!!!!!!!!!!
+        dist, ind = self.tree.query(img[0], k=5)
 
         # new person
         if (dist[0] > 1000):

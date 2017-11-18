@@ -5,8 +5,8 @@ import time
 class Posture:
     tracks = []
 
-    def __init__(self, i, xi, yi):
-        self.i = i
+    def __init__(self, id, xi, yi):
+        self.id = id
         self.x = xi
         self.y = yi
         self.tracks = []
@@ -33,7 +33,7 @@ class Posture:
         return self.vectors
 
     def getId(self):
-        return self.i
+        return self.id
 
     def getState(self):
         return self.state
@@ -53,7 +53,7 @@ class Posture:
     def setVectorSaved(self, a):
         self.vectorSaved = a
 
-    def updateCoords(self, xn, yn):
+    def addCoords(self, xn, yn):
         self.tracks.append([self.x, self.y])
         self.x = xn
         self.y = yn
@@ -73,10 +73,11 @@ class Posture:
     def getDone(self):
         return self.done
 
-    def going_LEFT(self, mid_end):
+    def going_LEFT(self, line_left):
         if len(self.tracks) >= 3:
             if self.state == '0':
-                if self.tracks[-1][0] < mid_end and self.tracks[-2][0] >= mid_end:  # cruzo la linea
+                # aktualne położenie jest mniejsze niż lewa a poprzednie było po prawej stronie lewej linii
+                if self.tracks[-1][0] < line_left and self.tracks[-2][0] >= line_left:
                     self.state = '1'
                     self.dir = 'left'
                     return True
@@ -85,10 +86,10 @@ class Posture:
         else:
             return False
 
-    def going_RIGHT(self, mid_start):
+    def going_RIGHT(self, line_right):
         if len(self.tracks) >= 3:
             if self.state == '0':
-                if self.tracks[-1][0] > mid_start and self.tracks[-2][0] <= mid_start:  # cruzo la linea
+                if self.tracks[-1][0] > line_right and self.tracks[-2][0] <= line_right:  # cruzo la linea
                     self.state = '1'
                     self.dir = 'right'
                     return True
