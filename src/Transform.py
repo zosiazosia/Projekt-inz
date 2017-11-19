@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import os
 from scipy import spatial
 
+
 class Transform:
     def __init__(self, id):
         self.id = id
@@ -62,7 +63,6 @@ class Transform:
             else:
                 print(pers)
                 persons[pers].addVectors(posture.getVectors())
-
 
     # img already as a transformed vector
     def tree_decide(self, img):
