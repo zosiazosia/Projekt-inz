@@ -4,60 +4,88 @@ from keras.applications.vgg19 import preprocess_input
 from keras.models import Model
 import numpy as np
 import cv2
+import Posture
 import Person
 import matplotlib.pyplot as plt
 import os
 from scipy import spatial
 
 
-#jako pola base_mode?
-#jako pole tree?
 class Transform:
-    def __init__(self):
+    def __init__(self, id):
+        self.id = id
         self.base_model = VGG19(weights='imagenet')
         self.model = Model(inputs=self.base_model.input, outputs=self.base_model.get_layer('block4_pool').output)
-        self.tree
+        self.tree = []
         self.persons = []
         self.indexes = []
 
-    def transform(self, img):
-        imgT  = cv2.resize(img, (224, 224))
+    def transform(self, imgT):
+
+        # img = image.load_img(img_path, target_size=(224, 224))
         x = image.img_to_array(imgT)
         x = np.expand_dims(x, axis=0)
         x = preprocess_input(x)
 
-        block4 = self.model.predict(x)
-        print("shape", block4.shape)
-        a = block4
+        a = self.model.predict(x)
         b = ((a.sum(axis=0)).mean(axis=0)).mean(axis=0)
         return b
 
-#build tree from all currently available vectors
-    def build_tree(self):
+    # build tree from all currently available vectors
+    def build_tree(self, persons):
         tab = []
         i = 0
-        for p in self.persons:
-            person = Person.MyPerson(p)
-            for v in person.vectors:
-                tab[i] = v
-                self.indexes[i] = person.i
-                i = i+1
+        for p in persons:
+            # person = p.Posture()
+            for v in p.getVectors():
+                tab.append(v)
+                self.indexes.append(p.id)
 
         self.tree = spatial.KDTree(tab)
 
-#img already as a transformed vector
-    def classify(self, img):
-        #5 nearest vectors
-        dist, ind = self.tree.query(img, k=5)
+    def classify(self, persons, posture, pid):
+        # first person ever, nothing to classify
+        if (len(persons) == 0):
+            ps = Person.Person(0)
+            persons.append(ps)
+            ps.addVectors(posture.getVectors())
+            print("tuuuuu")
 
+        else:
+            pers = self.tree_decide(posture.getVectors())
+
+            if (pers == 'new'):
+                ps = Person.Person(len(persons))
+                persons.append(ps)
+                ps.addVectors(posture.getVectors())
+                print("new")
+            # add vectors to already existing person
+            else:
+                print(pers)
+                persons[pers].addVectors(posture.getVectors())
+
+    # img already as a transformed vector
+    def tree_decide(self, img):
+        # 5 nearest vectors
+        # potem zmienić na samo img!!!!!!!!!!!
+        dist, ind = self.tree.query(img[0], k=5)
+        print(dist, ind)
+
+        # new person
+        if (dist[0] > 700):
+            return ("new")
+        # person reidentified
+        else:
+            return self.indexes[ind[0]]
+
+
+
+            # better classification
+
+    def classi(self):
         p_id = []
         i = 0
-        for v in ind:
-            nr = self.indexes[v]
+        # for v in ind:
+        # nr = self.indexes[v]
 
-            i = i+1
-
-
-
-
-
+        # i = i+1
