@@ -6,6 +6,7 @@ import os
 import Transform
 import Counter
 import Posture
+import sys
 
 # known direction, posture to classify
 
@@ -25,7 +26,7 @@ if __name__ == '__main__':
                                    "../caffe/MobileNetSSD_deploy.caffemodel")
 
     #wczytanie filmu
-    # cap = cv2.VideoCapture('../mov/schody_2.mov')
+    cap = cv2.VideoCapture('../mov/schody_2.mov')
     #    cap = cv2.VideoCapture('../mov/IMG_1652.MOV')
     cap = cv2.VideoCapture(1)
     for i in range(19):
@@ -81,127 +82,135 @@ if __name__ == '__main__':
     while cap.isOpened():
         ret, frame = cap.read()
 
-        # co druga ramka
-        # frame_num += 1
-        # if frame_num % 2:
-        #     continue;
-        (h1, w1) = frame.shape[:2]
-        blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 0.007843, (300, 300), 127.5)
-        net.setInput(blob)
-        detections = net.forward()
+        if ret == True:
+            # co druga ramka
+            #  frame_num += 1
+            #  if frame_num % 2:
+            #      continue
+            frame_num += 1
+            if frame_num % 2:
+                continue
+            (h1, w1) = frame.shape[:2]
+            blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 0.007843, (300, 300), 127.5)
+            net.setInput(blob)
+            detections = net.forward()
 
-        # loop over the detections
-        for i in np.arange(0, detections.shape[2]):
-            # extract the confidence (i.e., probability) associated with the prediction
-            confidence = detections[0, 0, i, 2]
+            # loop over the detections
+            for i in np.arange(0, detections.shape[2]):
+                # extract the confidence (i.e., probability) associated with the prediction
+                confidence = detections[0, 0, i, 2]
 
-            idx = int(detections[0, 0, i, 1])  # idx = 15 dla person
-            # filter out weak detections by ensuring the `confidence` is
-            # greater than the minimum confidence
-            if confidence > 0.3 and idx == PERSON:
-                # extract the index of the class label from the `detections`,
-                # then compute the (x, y)-coordinates of the bounding box for
-                # the object
-                box = detections[0, 0, i, 3:7] * np.array([w1, h1, w1, h1])
-                (startX, startY, endX, endY) = box.astype("int")
+                idx = int(detections[0, 0, i, 1])  # idx = 15 dla person
+                # filter out weak detections by ensuring the `confidence` is
+                # greater than the minimum confidence
+                if confidence > 0.3 and idx == PERSON:
+                    # extract the index of the class label from the `detections`,
+                    # then compute the (x, y)-coordinates of the bounding box for
+                    # the object
+                    box = detections[0, 0, i, 3:7] * np.array([w1, h1, w1, h1])
+                    (startX, startY, endX, endY) = box.astype("int")
 
-                # display the prediction
-                label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
-                cv2.rectangle(frame, (startX, startY), (endX, endY), COLORS[idx], 2)
-                y = startY - 15 if startY - 15 > 15 else startY + 15
-                cv2.putText(frame, label, (startX, y),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+                    # display the prediction
+                    label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
+                    cv2.rectangle(frame, (startX, startY), (endX, endY), COLORS[idx], 2)
+                    y = startY - 15 if startY - 15 > 15 else startY + 15
+                    cv2.putText(frame, label, (startX, y),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
 
-                #współrzędne środka masy
-                cx = int((endX - startX) / 2 + startX)
-                cy = int((endY - startY) / 2 + startY)
+                    # współrzędne środka masy
+                    cx = int((endX - startX) / 2 + startX)
+                    cy = int((endY - startY) / 2 + startY)
 
-                new = True
-                # detection between white lines
-                if cx in range(left_limit, right_limit):
-                    # loop over active postures
-                    for p in postures:
+                    new = True
+                    # detection between white lines
+                    if cx in range(left_limit, right_limit):
+                        # loop over active postures
+                        for p in postures:
 
-                        now = int(time.strftime('%M%S'))
-                        if abs(cx - p.getX()) <= 150 and abs(cy - p.getY()) <= 100 and (
-                                        abs(now - int(p.getLastTime())) <= 2 or abs(
-                                        now - int(p.getLastTime())) >= 5958):
+                            now = int(time.strftime('%M%S'))
+                            if abs(cx - p.getX()) <= 150 and abs(cy - p.getY()) <= 100 and (
+                                            abs(now - int(p.getLastTime())) <= 2 or abs(
+                                            now - int(p.getLastTime())) >= 5958):
 
-                            img = frame[startY:endY, startX:endX]
-                            label = "cx%d cy%d time: %d" % (cx, cy, p.getLastTime())
-                            cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
-                            id = '%d' % p.getId()
-                            cv2.putText(frame, id, (cx + 2, cy), cv2.FONT_HERSHEY_SIMPLEX, 3, COLORS[idx], 2)
+                                img = frame[startY:endY, startX:endX]
+                                label = "cx%d cy%d time: %d" % (cx, cy, p.getLastTime())
+                                cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+                                id = '%d' % p.getId()
+                                cv2.putText(frame, id, (cx + 2, cy), cv2.FONT_HERSHEY_SIMPLEX, 3, COLORS[idx], 2)
 
-                            id = p.getId()
+                                id = p.getId()
 
-                            if p.getState() != '1':
-                                vector = trans.transform(img)
-                                p.addVector(vector)
-                            #postures[id].addVector(vector)
+                                if p.getState() != '1':
+                                    try:
+                                        imgT = cv2.resize(img, (224, 224))
+                                        vector = trans.transform(imgT)
+                                        p.addVector(vector)
+                                    except:
+                                        print("Unexpected error:", sys.exc_info()[0])
 
-                            cv2.imwrite("../out/person%d-%d.png" % (id, img_counter), img)
-                            img_counter += 1
+                                # cv2.imwrite("../out/person%d-%d.png" % (id, img_counter), img)
+                                img_counter += 1
 
-                            new = False
+                                new = False
 
-                            p.addCoords(cx, cy)
-                            if p.going_LEFT(line_left) == True:
-                                trans.classify(persons, p, p.getId())
+                                p.addCoords(cx, cy)
+                                if p.going_LEFT(line_left, line_right) == True:
+                                    trans.classify(persons, p, p.getId())
 
-                                cnt_up += 1;
-                                print("ID:", p.getId(), 'crossed going up at', time.strftime("%c"))
+                                    cnt_up += 1;
+                                    print("ID:", p.getId(), 'crossed going up at', time.strftime("%c"))
 
-                            elif p.going_RIGHT(line_right) == True:
-                                trans.classify(persons, p, p.getId())
+                                elif p.going_RIGHT(line_left, line_right) == True:
+                                    trans.classify(persons, p, p.getId())
 
-                                cnt_down += 1;
-                                print("ID:", p.getId(), 'crossed going down at', time.strftime("%c"))
+                                    cnt_down += 1;
+                                    print("ID:", p.getId(), 'crossed going down at', time.strftime("%c"))
 
-                            break
-                        # if p.getState() == '1':
-                        #     if p.getDir() == 'right' and p.getX() > right_limit:
-                        #         p.setDone()
-                        #     elif p.getDir() == 'left' and p.getX() < left_limit:
-                        #         p.setDone()
+                                break
+                            # if p.getState() == '1':
+                            #     if p.getDir() == 'right' and p.getX() > right_limit:
+                            #         p.setDone()
+                            #     elif p.getDir() == 'left' and p.getX() < left_limit:
+                            #         p.setDone()
 
-                        # posture outside white space
-                        if (p.getState() == "1" or p.getX() > right_limit or p.getX() < left_limit):
-                            index = postures.index(p)
-                            postures.pop(index)
-                            del p
-                    if new == True:
-                        post = Posture.Posture(pid, cx, cy)
-                        postures.append(post)
+                            # posture outside white space
+                            if (p.getState() == "1" or p.getX() > right_limit or p.getX() < left_limit):
+                                index = postures.index(p)
+                                postures.pop(index)
+                                del p
+                        if new == True:
+                            post = Posture.Posture(pid, cx, cy)
+                            postures.append(post)
 
-                        # rebuild tree -> new posture has to be classified
-                        if (len(persons) != 0):
-                            trans.build_tree(persons)
+                            # rebuild tree -> new posture has to be classified
+                            if (len(persons) != 0):
+                                trans.build_tree(persons)
 
+                            # img_counter = 0
+                            pid += 1
 
-                        # img_counter = 0
-                        pid += 1
+                        cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
+            for i in postures:
+                cv2.putText(frame, str(i.getId()), (i.getX(), i.getY()), font, 0.3, i.getRGB(), 1, cv2.LINE_AA)
 
-                    cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
-        for i in postures:
-            cv2.putText(frame, str(i.getId()), (i.getX(),i.getY()), font, 0.3, i.getRGB(), 1, cv2.LINE_AA)
+            str_up = 'LEFT: ' + str(cnt_up)
+            str_down = 'RIGHT: ' + str(cnt_down)
+            frame = cv2.polylines(frame, [pts_L1], False, line_down_color, thickness=2)
+            frame = cv2.polylines(frame, [pts_L2], False, line_up_color, thickness=2)
+            frame = cv2.polylines(frame, [pts_L3], False, (255, 255, 255), thickness=1)
+            frame = cv2.polylines(frame, [pts_L4], False, (255, 255, 255), thickness=1)
+            cv2.putText(frame, str_up, (10, 40), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+            cv2.putText(frame, str_up, (10, 40), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+            cv2.putText(frame, str_down, (10, 90), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+            cv2.putText(frame, str_down, (10, 90), font, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
 
-        str_up = 'LEFT: ' + str(cnt_up)
-        str_down = 'RIGHT: ' + str(cnt_down)
-        frame = cv2.polylines(frame,[pts_L1],False,line_down_color,thickness=2)
-        frame = cv2.polylines(frame,[pts_L2],False,line_up_color,thickness=2)
-        frame = cv2.polylines(frame,[pts_L3],False,(255,255,255),thickness=1)
-        frame = cv2.polylines(frame,[pts_L4],False,(255,255,255),thickness=1)
-        cv2.putText(frame, str_up ,(10,40),font,0.5,(255,255,255),2,cv2.LINE_AA)
-        cv2.putText(frame, str_up ,(10,40),font,0.5,(0,0,255),1,cv2.LINE_AA)
-        cv2.putText(frame, str_down ,(10,90),font,0.5,(255,255,255),2,cv2.LINE_AA)
-        cv2.putText(frame, str_down, (10,90), font, 0.5, (255,0,0), 1, cv2.LINE_AA)
+            cv2.imshow('Frame', frame)
 
-        cv2.imshow('Frame',frame)
-        
-        #preisonar ESC para salir
-        k = cv2.waitKey(30) & 0xff
-        if k == 27:
+            # preisonar ESC para salir
+            k = cv2.waitKey(30) & 0xff
+            if k == 27:
+                break
+        else:
             break
     cap.release()
     cv2.destroyAllWindows()

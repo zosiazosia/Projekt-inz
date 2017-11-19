@@ -10,9 +10,6 @@ import matplotlib.pyplot as plt
 import os
 from scipy import spatial
 
-
-# jako pola base_mode?
-# jako pole tree?
 class Transform:
     def __init__(self, id):
         self.id = id
@@ -22,15 +19,14 @@ class Transform:
         self.persons = []
         self.indexes = []
 
-    def transform(self, img):
-        imgT = cv2.resize(img, (224, 224))
+    def transform(self, imgT):
+
+        # img = image.load_img(img_path, target_size=(224, 224))
         x = image.img_to_array(imgT)
         x = np.expand_dims(x, axis=0)
         x = preprocess_input(x)
 
-        block4 = self.model.predict(x)
-        print("shape", block4.shape)
-        a = block4
+        a = self.model.predict(x)
         b = ((a.sum(axis=0)).mean(axis=0)).mean(axis=0)
         return b
 
@@ -55,7 +51,6 @@ class Transform:
             print("tuuuuu")
 
         else:
-            # potem zmienić na przekazanie wszystkich wektorów tej postury, na razie na ostatnim
             pers = self.tree_decide(posture.getVectors())
 
             if (pers == 'new'):
@@ -68,6 +63,7 @@ class Transform:
                 print(pers)
                 persons[pers].addVectors(posture.getVectors())
 
+
     # img already as a transformed vector
     def tree_decide(self, img):
         # 5 nearest vectors
@@ -76,11 +72,10 @@ class Transform:
         print(dist, ind)
 
         # new person
-        if (dist[0] > 500):
+        if (dist[0] > 700):
             return ("new")
         # person reidentified
         else:
-
             return self.indexes[ind[0]]
 
 
