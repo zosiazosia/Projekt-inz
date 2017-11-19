@@ -16,7 +16,7 @@ running = True
 
 def run_video_counter(cam, queue, width, height, fps, gui):
     trans = Transform.Transform(0)
-    counter = Counter.Counter
+    counter = Counter.Counter('left')  # or 'right'
     cnt_left = 0
     cnt_right = 0
     CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
@@ -29,9 +29,9 @@ def run_video_counter(cam, queue, width, height, fps, gui):
                                    "../caffe/MobileNetSSD_deploy.caffemodel")
 
     # wczytanie filmu
-    # cap = cv2.VideoCapture('../mov/schody_2.mov')
+    cap = cv2.VideoCapture('../mov/schody_2.mov')
     #    cap = cv2.VideoCapture('../mov/IMG_1652.MOV')
-    cap = cv2.VideoCapture(cam)
+    #cap = cv2.VideoCapture(cam)
     for i in range(19):
         print(i, cap.get(i))
 
@@ -48,8 +48,8 @@ def run_video_counter(cam, queue, width, height, fps, gui):
     line_left = int(2 * (w / 5))
     line_right = int(3 * (w / 5))
 
-    left_limit = int(0.3 * (w / 5))
-    right_limit = int(4.7 * (w / 5))
+    left_limit = int(1 * (w / 5))
+    right_limit = int(4 * (w / 5))
 
     print("Red line y:", str(line_right))
     print("Blue line y:", str(line_left))
@@ -162,14 +162,14 @@ def run_video_counter(cam, queue, width, height, fps, gui):
                                 new = False
 
                                 p.addCoords(cx, cy)
-                                if p.going_LEFT(line_left, line_right):
-                                    trans.classify(p, p.getId())
+                                if p.going_IN(line_left, line_right, counter):
+                                    trans.classify(p, counter)
 
                                     cnt_left += 1
                                     print("ID:", p.getId(), 'crossed going left at', time.strftime("%c"))
 
-                                elif p.going_RIGHT(line_left, line_right):
-                                    trans.classify(p, p.getId())
+                                elif p.going_OUT(line_left, line_right, counter):
+                                    trans.classify(p, counter)
 
                                     cnt_right += 1
                                     print("ID:", p.getId(), 'crossed going right at', time.strftime("%c"))
@@ -203,14 +203,24 @@ def run_video_counter(cam, queue, width, height, fps, gui):
 
             str_up = 'LEFT: ' + str(cnt_left)
             str_down = 'RIGHT: ' + str(cnt_right)
+            str_in = 'IN: ' + str(counter.getCameIn())
+            str_out = 'OUT: ' + str(counter.getCameOut())
+            str_rein = 'RE_IN: ' + str(counter.getReidentIn())
+            str_reout = 'RE_OUT: ' + str(counter.getReidentOut())
+            str_inside = 'INSIDE: ' + str(counter.getAreInside())
             frame = cv2.polylines(frame, [pts_L1], False, line_down_color, thickness=2)
             frame = cv2.polylines(frame, [pts_L2], False, line_up_color, thickness=2)
             frame = cv2.polylines(frame, [pts_L3], False, (255, 255, 255), thickness=1)
             frame = cv2.polylines(frame, [pts_L4], False, (255, 255, 255), thickness=1)
             cv2.putText(frame, str_up, (10, 40), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
             cv2.putText(frame, str_up, (10, 40), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-            cv2.putText(frame, str_down, (10, 90), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-            cv2.putText(frame, str_down, (10, 90), font, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+            cv2.putText(frame, str_down, (10, 70), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+            cv2.putText(frame, str_down, (10, 70), font, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+            cv2.putText(frame, str_in, (10, 100), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+            cv2.putText(frame, str_out, (10, 130), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+            cv2.putText(frame, str_rein, (10, 160), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+            cv2.putText(frame, str_reout, (10, 190), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+            cv2.putText(frame, str_inside, (10, 220), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
 
             if gui:
                 if queue.qsize() < 10:

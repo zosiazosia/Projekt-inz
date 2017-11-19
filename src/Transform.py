@@ -9,6 +9,7 @@ import Person
 import matplotlib.pyplot as plt
 import os
 from scipy import spatial
+import sys
 
 
 class Transform:
@@ -24,8 +25,6 @@ class Transform:
         self.personsOut = []
 
     def transform(self, imgT):
-
-        # img = image.load_img(img_path, target_size=(224, 224))
         x = image.img_to_array(imgT)
         x = np.expand_dims(x, axis=0)
         x = preprocess_input(x)
@@ -63,12 +62,12 @@ class Transform:
                 return i
             i = i + 1
 
-    def classify(self, posture, pid):
-
+    def classify(self, posture, counter):
         if posture.getDir() == 'in':
             if (len(self.personsOut) == 0):  # no need for building a tree here
                 ps = Person.Person(len(self.personsIn))
                 print("no outside")
+                counter.come_in()
             else:
                 self.build_treeIn()
                 pers = self.tree_decideIn(posture.getVectors())
@@ -76,11 +75,13 @@ class Transform:
                 if (pers == 'new'):
                     ps = Person.Person(len(self.personsIn))
                     print("new person, but somebody is already outside")
+                    counter.come_in()
                 # change person localisation
                 else:
                     i = self.getIndexByPid(pers, self.personsOut)
                     ps = self.personsOut.pop(i)
                     print("coming in reidentified as ", ps.getId())
+                    counter.reid_in()
             self.personsIn.append(ps)
             ps.addVectors(posture.getVectors())
 
@@ -94,17 +95,19 @@ class Transform:
                 i = self.getIndexByPid(pers, self.personsIn)
                 ps = self.personsIn.pop(i)
                 print("coming out reidentified as ", ps.getId())
+                counter.reid_out()
                 self.personsOut.append(ps)
                 ps.addVectors(posture.getVectors())
 
-    # img already as a transformed vector, returns person's id
-    def tree_decideIn(self, img):
-        # 5 nearest vectors
-        # potem zmienić na samo img!!!!!!!!!!!
-        dist, ind = self.treeIn.query(img[0], k=5)
+    # returns person's id
+    def tree_decideIn(self, vectors):
+        dist, ind = self.treeIn.query(vectors[0], k=7)
         print(dist, ind)
         for i in ind:
-            print(self.indexesIn[i])
+            try:
+                print(self.indexesIn[i])
+            except:
+                print("Not so many vectors in tree:", sys.exc_info()[0])
 
         # new person
         if (dist[0] > 700):
@@ -113,14 +116,14 @@ class Transform:
         else:
             return self.indexesIn[ind[0]]
 
-    # img already as a transformed vector
-    def tree_decideOut(self, img):
-        # 5 nearest vectors
-        # potem zmienić na samo img!!!!!!!!!!!
-        dist, ind = self.treeOut.query(img[0], k=5)
+    def tree_decideOut(self, vectors):
+        dist, ind = self.treeOut.query(vectors[0], k=7)
         print(dist, ind)
         for i in ind:
-            print(self.indexesOut[i])
+            try:
+                print(self.indexesOut[i])
+            except:
+                print("Not so many vectors in tree:", sys.exc_info()[0])
         return self.indexesOut[ind[0]]
 
 

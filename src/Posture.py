@@ -1,5 +1,6 @@
 from random import randint
 import time
+import Counter
 
 
 class Posture:
@@ -16,7 +17,6 @@ class Posture:
         self.state = '0'
         self.dir = None
         self.lastTime = int(time.strftime("%M%S"))
-        self.vectorSaved = False
         self.vectors = []
 
     def getRGB(self):
@@ -46,12 +46,6 @@ class Posture:
     def getY(self):
         return self.y
 
-    def getVectorSaved(self):
-        return self.vectorSaved
-
-    def setVectorSaved(self, a):
-        self.vectorSaved = a
-
     def addCoords(self, xn, yn):
         self.tracks.append([self.x, self.y])
         self.x = xn
@@ -66,28 +60,37 @@ class Posture:
     def getLastTime(self):
         return self.lastTime
 
-    def going_LEFT(self, line_left, line_right):
+    def going_IN(self, line_left, line_right, counter):
         if len(self.tracks) >= 3:
             if self.state == '0':
-                # aktualne położenie jest mniejsze niż lewa a poprzednie było po prawej stronie lewej linii
-                # if ((self.tracks[-1][0] < line_left and self.tracks[-2][0] >= line_left) or (self.tracks[-1][0] < line_right and self.tracks[-2][0] >= line_right)) :
-                if (self.tracks[-1][0] < line_right and self.tracks[-2][0] >= line_right):
-                    self.state = '1'
-                    self.dir = 'in'
-                    return True
+                if counter.getInDirection() == 'left':
+                    if (self.tracks[-1][0] < line_right and self.tracks[-2][0] >= line_right):
+                        self.state = '1'
+                        self.dir = 'in'
+                        return True
+                elif counter.getInDirection() == 'right':
+                    if (self.tracks[-1][0] > line_left and self.tracks[-2][0] <= line_left):
+                        self.state = '1'
+                        self.dir = 'in'
+                        return True
             else:
                 return False
         else:
             return False
 
-    def going_RIGHT(self, line_left, line_right):
+    def going_OUT(self, line_left, line_right, counter):
         if len(self.tracks) >= 3:
             if self.state == '0':
-                # if ((self.tracks[-1][0] > line_right and self.tracks[-2][0] <= line_right) or (self.tracks[-1][0] > line_left and self.tracks[-2][0] <= line_left)):
-                if (self.tracks[-1][0] > line_left and self.tracks[-2][0] <= line_left):
-                    self.state = '1'
-                    self.dir = 'out'
-                    return True
+                if counter.getInDirection() == 'left':
+                    if (self.tracks[-1][0] > line_left and self.tracks[-2][0] <= line_left):
+                        self.state = '1'
+                        self.dir = 'out'
+                        return True
+                elif counter.getInDirection() == 'right':
+                    if (self.tracks[-1][0] < line_right and self.tracks[-2][0] >= line_right):
+                        self.state = '1'
+                        self.dir = 'out'
+                        return True
             else:
                 return False
         else:

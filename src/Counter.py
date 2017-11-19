@@ -1,10 +1,11 @@
 class Counter:
-    def __init__(self):
+    def __init__(self, inDir):
         self.came_in = 0
         self.came_out = 0
         self.reident_in = 0
         self.reident_out = 0
         self.are_inside = 0
+        self.inDirection = inDir  # 'left or 'right'
 
     def come_in(self):
         self.came_in += 1
@@ -14,10 +15,28 @@ class Counter:
         self.came_out += 1
         self.are_inside -= 1
 
-    def reident_in(self):
+    def reid_in(self):
         self.reident_in += 1
         self.are_inside += 1
 
-    def reident_out(self):
+    def reid_out(self):
         self.reident_out += 1
         self.are_inside -= 1
+
+    def getCameIn(self):
+        return self.came_in
+
+    def getCameOut(self):
+        return self.came_out
+
+    def getReidentIn(self):
+        return self.reident_in
+
+    def getReidentOut(self):
+        return self.reident_out
+
+    def getAreInside(self):
+        return self.are_inside
+
+    def getInDirection(self):
+        return self.inDirection
