@@ -17,8 +17,8 @@ running = True
 def run_video_counter(cam, queue, width, height, fps, gui):
     trans = Transform.Transform(0)
     counter = Counter.Counter
-    cnt_up = 0
-    cnt_down = 0
+    cnt_left = 0
+    cnt_right = 0
     CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
                "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
                "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
@@ -48,8 +48,8 @@ def run_video_counter(cam, queue, width, height, fps, gui):
     line_left = int(2 * (w / 5))
     line_right = int(3 * (w / 5))
 
-    left_limit = int(1 * (w / 5))
-    right_limit = int(4 * (w / 5))
+    left_limit = int(0.3 * (w / 5))
+    right_limit = int(4.7 * (w / 5))
 
     print("Red line y:", str(line_right))
     print("Blue line y:", str(line_left))
@@ -163,16 +163,16 @@ def run_video_counter(cam, queue, width, height, fps, gui):
 
                                 p.addCoords(cx, cy)
                                 if p.going_LEFT(line_left, line_right):
-                                    trans.classify(persons, p, p.getId())
+                                    trans.classify(p, p.getId())
 
-                                    cnt_up += 1
-                                    print("ID:", p.getId(), 'crossed going up at', time.strftime("%c"))
+                                    cnt_left += 1
+                                    print("ID:", p.getId(), 'crossed going left at', time.strftime("%c"))
 
                                 elif p.going_RIGHT(line_left, line_right):
-                                    trans.classify(persons, p, p.getId())
+                                    trans.classify(p, p.getId())
 
-                                    cnt_down += 1
-                                    print("ID:", p.getId(), 'crossed going down at', time.strftime("%c"))
+                                    cnt_right += 1
+                                    print("ID:", p.getId(), 'crossed going right at', time.strftime("%c"))
 
                                 break
                             # if p.getState() == '1':
@@ -191,8 +191,8 @@ def run_video_counter(cam, queue, width, height, fps, gui):
                             postures.append(post)
 
                             # rebuild tree -> new posture has to be classified
-                            if len(persons) != 0:
-                                trans.build_tree(persons)
+                            # if len(persons) != 0:
+                            #     trans.build_tree(persons)
 
                             # img_counter = 0
                             pid += 1
@@ -201,8 +201,8 @@ def run_video_counter(cam, queue, width, height, fps, gui):
             for i in postures:
                 cv2.putText(frame, str(i.getId()), (i.getX(), i.getY()), font, 0.3, i.getRGB(), 1, cv2.LINE_AA)
 
-            str_up = 'LEFT: ' + str(cnt_up)
-            str_down = 'RIGHT: ' + str(cnt_down)
+            str_up = 'LEFT: ' + str(cnt_left)
+            str_down = 'RIGHT: ' + str(cnt_right)
             frame = cv2.polylines(frame, [pts_L1], False, line_down_color, thickness=2)
             frame = cv2.polylines(frame, [pts_L2], False, line_up_color, thickness=2)
             frame = cv2.polylines(frame, [pts_L3], False, (255, 255, 255), thickness=1)

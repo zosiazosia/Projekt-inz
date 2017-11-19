@@ -73,7 +73,7 @@ class Posture:
                 # if ((self.tracks[-1][0] < line_left and self.tracks[-2][0] >= line_left) or (self.tracks[-1][0] < line_right and self.tracks[-2][0] >= line_right)) :
                 if (self.tracks[-1][0] < line_right and self.tracks[-2][0] >= line_right):
                     self.state = '1'
-                    self.dir = 'left'
+                    self.dir = 'in'
                     return True
             else:
                 return False
@@ -86,7 +86,7 @@ class Posture:
                 # if ((self.tracks[-1][0] > line_right and self.tracks[-2][0] <= line_right) or (self.tracks[-1][0] > line_left and self.tracks[-2][0] <= line_left)):
                 if (self.tracks[-1][0] > line_left and self.tracks[-2][0] <= line_left):
                     self.state = '1'
-                    self.dir = 'right'
+                    self.dir = 'out'
                     return True
             else:
                 return False
