@@ -1,3 +1,5 @@
+import queue
+
 import numpy as np
 import cv2
 import Person
@@ -8,10 +10,11 @@ import Counter
 import Posture
 import sys
 
+running = True
+
 # known direction, posture to classify
 
-
-if __name__ == '__main__':
+def run_video_counter(cam, queue, width, height, fps, gui):
     trans = Transform.Transform(0)
     counter = Counter.Counter
     cnt_up = 0
@@ -26,9 +29,9 @@ if __name__ == '__main__':
                                    "../caffe/MobileNetSSD_deploy.caffemodel")
 
     # wczytanie filmu
-    cap = cv2.VideoCapture('../mov/schody_2.mov')
+    # cap = cv2.VideoCapture('../mov/schody_2.mov')
     #    cap = cv2.VideoCapture('../mov/IMG_1652.MOV')
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(cam)
     for i in range(19):
         print(i, cap.get(i))
 
@@ -78,8 +81,12 @@ if __name__ == '__main__':
     img_counter = 0
     frame_num = 0
 
+    global running
+    if not gui:
+        running = cap.isOpened()
+
     # for each frame
-    while cap.isOpened():
+    while running:
         ret, frame = cap.read()
 
         if ret:
@@ -205,13 +212,22 @@ if __name__ == '__main__':
             cv2.putText(frame, str_down, (10, 90), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
             cv2.putText(frame, str_down, (10, 90), font, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
 
-            cv2.imshow('Frame', frame)
-
-            # preisonar ESC para salir
-            k = cv2.waitKey(30) & 0xff
-            if k == 27:
-                break
+            if gui:
+                if queue.qsize() < 10:
+                    queue.put(frame)
+                else:
+                    print(queue.qsize())
+            else:
+                cv2.imshow('Frame', frame)
+                k = cv2.waitKey(30) & 0xff
+                if k == 27:
+                    break
         else:
             break
+
     cap.release()
     cv2.destroyAllWindows()
+
+
+if __name__ == '__main__':
+    run_video_counter(1, queue=queue.Queue(), width=None, height=None, fps=None, gui=False)
