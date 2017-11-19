@@ -11,7 +11,7 @@ import os
 from scipy import spatial
 
 
-#jako pola base_mode?
+# jako pola base_mode?
 # jako pole tree?
 class Transform:
     def __init__(self, id):
@@ -23,7 +23,7 @@ class Transform:
         self.indexes = []
 
     def transform(self, img):
-        imgT  = cv2.resize(img, (224, 224))
+        imgT = cv2.resize(img, (224, 224))
         x = image.img_to_array(imgT)
         x = np.expand_dims(x, axis=0)
         x = preprocess_input(x)
@@ -68,7 +68,6 @@ class Transform:
                 print(pers)
                 persons[pers].addVectors(posture.getVectors())
 
-
     # img already as a transformed vector
     def tree_decide(self, img):
         # 5 nearest vectors
@@ -94,4 +93,4 @@ class Transform:
         # for v in ind:
         # nr = self.indexes[v]
 
-        #i = i+1
+        # i = i+1

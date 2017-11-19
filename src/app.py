@@ -27,7 +27,7 @@ if __name__ == '__main__':
     #wczytanie filmu
     # cap = cv2.VideoCapture('../mov/schody_2.mov')
     #    cap = cv2.VideoCapture('../mov/IMG_1652.MOV')
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     for i in range(19):
         print (i, cap.get(i))
     
