@@ -1,7 +1,7 @@
 class Person:
-    def __init__(self, _id):
+    def __init__(self, id):
         self.vectors = []
-        self._id = _id
+        self.id = id
 
     def addVector(self, vector):
         self.vectors.append(vector)

@@ -230,4 +230,4 @@ def run_video_counter(cam, queue, width, height, fps, gui):
 
 
 if __name__ == '__main__':
-    run_video_counter(1, queue=queue.Queue(), width=None, height=None, fps=None, gui=False)
+    run_video_counter(cam=0, queue=queue.Queue(), width=None, height=None, fps=None, gui=False)
