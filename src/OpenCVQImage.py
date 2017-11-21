@@ -4,32 +4,15 @@ import cv2
 import threading
 import queue
 
-from app import run_video_counter
+from app import detect
 
-running = False
-capture_thread = None
+
 form_class = uic.loadUiType("simple.ui")[0]
-frame_queue = queue.Queue()
+raw_frame_queue = queue.Queue()
+processed_frames_queue = queue.Queue()
 video_width = 1920
 video_height = 1080
 
-
-def grab_without_counter(cam, queue, width, height, fps, gui):
-    global running
-    capture = cv2.VideoCapture(cam)
-    capture.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-    capture.set(cv2.CAP_PROP_FPS, fps)
-
-    while (running):
-        ret, frame = capture.read()
-
-        if queue.qsize() < 10:
-            queue.put(frame)
-        else:
-            print(queue.qsize())
-
-    capture.release()
 
 
 class OwnImageWidget(QtWidgets.QWidget):
@@ -59,7 +42,7 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
         self.exportButton.setEnabled(False)
         self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
-
+        self.running = threading.Condition()
         self.window_width = self.ImgWidget.frameSize().width()
         self.window_height = self.ImgWidget.frameSize().height()
         self.ImgWidget = OwnImageWidget(self.ImgWidget)
@@ -67,30 +50,37 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(1)
+        self.start_event = threading.Event()
+        self.stop_event = threading.Event()
+        self.video_opened = threading.Event()
+        self.video_height = None
+        self.video_width = None
+        self.read_thread = threading.Thread(
+            target=video_worker,
+            args=(
+            0, raw_frame_queue, processed_frames_queue, self.video_width, self.video_height, 30, True, self.start_event,
+            self.stop_event))
+
+        self.read_thread.start()
+
 
     def start(self):
-        global running
-        running = True
-        global capture_thread
-        if capture_thread is None or capture_thread._is_stopped:
-            capture_thread = threading.Thread(target=run_video_counter,
-                                              args=(1, frame_queue, video_width, video_height, 30, True))
-            capture_thread.start()
-
+        self.start_event.set()
+        self.stop_event.clear()
         self.startButton.setEnabled(False)
         self.stopButton.setEnabled(True)
 
     def stop(self):
-        global running
-        running = False
-        global capture_thread
-        capture_thread.join()
+        self.stop_event.set()
+        self.start_event.clear()
+        processed_frames_queue.queue.clear()
+        raw_frame_queue.queue.clear()
         self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
 
     def update_frame(self):
-        if not frame_queue.empty():
-            img = frame_queue.get()
+        if not processed_frames_queue.empty():
+            img = processed_frames_queue.get()
 
             # img_height, img_width, img_colors = img.shape
             # scale_w = float(self.window_width) / float(img_width)

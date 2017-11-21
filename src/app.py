@@ -1,4 +1,5 @@
 import queue
+import threading
 
 import numpy as np
 import cv2
@@ -10,13 +11,50 @@ import Counter
 import Posture
 import sys
 
-running = True
 
-# known direction, posture to classify
+def video_worker(cam, raw_queue, processed_queue, width, height, fps, gui, start_event, stop_event):
+    capture = cv2.VideoCapture(cam)
+    width = capture.get(cv2.CAP_PROP_FRAME_WIDTH)
+    height = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
-def run_video_counter(cam, queue, width, height, fps, gui):
+    detect_thread = threading.Thread(
+        target=detect,
+        args=(raw_queue, processed_queue, width, height, 'left', gui))
+    detect_thread.start()
+
+    capture.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+    capture.set(cv2.CAP_PROP_FPS, fps)
+
+    if gui:
+        start_event.wait()
+    else:
+        start_event.set()
+
+    frame_num = 0
+    while start_event.is_set():
+        ret, frame = capture.read()
+
+        frame_num += 1
+        if frame_num % 3:
+            continue
+
+        if raw_queue.qsize() < 30:
+            raw_queue.put(frame)
+        # else:
+        #     print(str("raw_queue_size: ") + str(raw_queue.qsize()))
+
+        if stop_event.is_set():
+            capture.release()
+            print("cos")
+            start_event.wait()
+            capture = cv2.VideoCapture(cam)
+
+
+# direction left or right
+def detect(raw_queue, processed_queue, width, height, direction, gui):
     trans = Transform.Transform(0)
-    counter = Counter.Counter('left')  # or 'right'
+    counter = Counter.Counter(direction)  # or 'right'
     cnt_left = 0
     cnt_right = 0
     CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
@@ -28,48 +66,39 @@ def run_video_counter(cam, queue, width, height, fps, gui):
     net = cv2.dnn.readNetFromCaffe("../caffe/MobileNetSSD_deploy.prototxt.txt",
                                    "../caffe/MobileNetSSD_deploy.caffemodel")
 
-    # wczytanie filmu
-    cap = cv2.VideoCapture('../mov/schody_2.mov')
-    #    cap = cv2.VideoCapture('../mov/IMG_1652.MOV')
-    #cap = cv2.VideoCapture(cam)
-    for i in range(19):
-        print(i, cap.get(i))
-
-    w = cap.get(3)
-    h = cap.get(4)
-    frameArea = h * w
+    frameArea = height * width
     areaTH = frameArea / 20  # frameArea/250
     areaMaxTH = frameArea / 2
-    areaMaxWidth = w / 2
-    areaMaxHeight = h / 2
+    areaMaxWidth = width / 2
+    areaMaxHeight = height / 2
     print('Area Threshold', areaTH)
 
     # #rysowanie linii
-    line_left = int(2 * (w / 5))
-    line_right = int(3 * (w / 5))
+    line_left = int(2 * (width / 5))
+    line_right = int(3 * (width / 5))
 
-    left_limit = int(1 * (w / 5))
-    right_limit = int(4 * (w / 5))
+    left_limit = int(1 * (width / 5))
+    right_limit = int(4 * (width / 5))
 
     print("Red line y:", str(line_right))
     print("Blue line y:", str(line_left))
     line_down_color = (255, 0, 0)
     line_up_color = (0, 0, 255)
     pt1 = [line_right, 0]
-    pt2 = [line_right, h]
+    pt2 = [line_right, height]
     pts_L1 = np.array([pt1, pt2], np.int32)
     pts_L1 = pts_L1.reshape((-1, 1, 2))
     pt3 = [line_left, 0]
-    pt4 = [line_left, h]
+    pt4 = [line_left, height]
     pts_L2 = np.array([pt3, pt4], np.int32)
     pts_L2 = pts_L2.reshape((-1, 1, 2))
 
     pt5 = [left_limit, 0]
-    pt6 = [left_limit, h]
+    pt6 = [left_limit, height]
     pts_L3 = np.array([pt5, pt6], np.int32)
     pts_L3 = pts_L3.reshape((-1, 1, 2))
     pt7 = [right_limit, 0]
-    pt8 = [right_limit, h]
+    pt8 = [right_limit, height]
     pts_L4 = np.array([pt7, pt8], np.int32)
     pts_L4 = pts_L4.reshape((-1, 1, 2))
 
@@ -81,22 +110,19 @@ def run_video_counter(cam, queue, width, height, fps, gui):
     img_counter = 0
     frame_num = 0
 
-    global running
-    if not gui:
-        running = cap.isOpened()
-
     # for each frame
-    while running:
-        ret, frame = cap.read()
+    while True:
+        if not raw_queue.empty():
+            frame = raw_queue.get()
 
-        if ret:
             # co druga ramka
             #  frame_num += 1
             #  if frame_num % 2:
             #      continue
-            frame_num += 1
-            if frame_num % 2:
-                continue
+            # frame_num += 1
+            # if frame_num % 2:
+            #     continue
+
             (h1, w1) = frame.shape[:2]
             blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 0.007843, (300, 300), 127.5)
             net.setInput(blob)
@@ -143,7 +169,8 @@ def run_video_counter(cam, queue, width, height, fps, gui):
                                 label = "cx%d cy%d time: %d" % (cx, cy, p.getLastTime())
                                 cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
                                 posture_id = '%d' % p.getId()
-                                cv2.putText(frame, posture_id, (cx + 2, cy), cv2.FONT_HERSHEY_SIMPLEX, 3, COLORS[idx],
+                                cv2.putText(frame, posture_id, (cx + 2, cy), cv2.FONT_HERSHEY_SIMPLEX, 3,
+                                            COLORS[idx],
                                             2)
 
                                 posture_id = p.getId()
@@ -223,21 +250,32 @@ def run_video_counter(cam, queue, width, height, fps, gui):
             cv2.putText(frame, str_inside, (10, 220), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
 
             if gui:
-                if queue.qsize() < 10:
-                    queue.put(frame)
-                else:
-                    print(queue.qsize())
+                processed_queue.put(frame)
             else:
                 cv2.imshow('Frame', frame)
                 k = cv2.waitKey(30) & 0xff
                 if k == 27:
                     break
-        else:
-            break
 
-    cap.release()
-    cv2.destroyAllWindows()
+
+def run_counter_without_gui():
+    gui = False
+    raw_frame_queue = queue.Queue()
+    processed_frames_queue = queue.Queue()
+    video_width = 1920
+    video_height = 1080
+    start_event = threading.Event()
+    stop_event = threading.Event()
+
+    counter_thread = threading.Thread(
+        target=video_worker,
+        args=(
+        "../mov/schody_2.mov", raw_frame_queue, processed_frames_queue, video_width, video_height, 30, gui, start_event,
+        stop_event))
+    counter_thread.start()
 
 
 if __name__ == '__main__':
-    run_video_counter(cam=0, queue=queue.Queue(), width=None, height=None, fps=None, gui=False)
+    print("no gui")
+    run_counter_without_gui()
+    #run_video_counter(cam=0, queue=queue.Queue(), width=None, height=None, fps=None, gui=False)
