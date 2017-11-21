@@ -117,6 +117,7 @@ class Transform:
             return self.indexesIn[ind[0]]
 
     def tree_decideOut(self, vectors):
+        # distance and indexes from tree
         dist, ind = self.treeOut.query(vectors[0], k=7)
         print(dist, ind)
         for i in ind:
