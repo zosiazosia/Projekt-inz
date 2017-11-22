@@ -3,11 +3,7 @@ from keras.preprocessing import image
 from keras.applications.vgg19 import preprocess_input
 from keras.models import Model
 import numpy as np
-import cv2
-import Posture
 import Person
-import matplotlib.pyplot as plt
-import os
 from scipy import spatial
 import sys
 
@@ -29,9 +25,24 @@ class Transform:
         x = np.expand_dims(x, axis=0)
         x = preprocess_input(x)
 
+        # wektor 'a' ma wymiary 1:14:14:512
         a = self.model.predict(x)
-        b = ((a.sum(axis=0)).mean(axis=0)).mean(axis=0)
-        return b
+
+        # wektor 'ret1' to wersja podstawowa - skumulowanie
+        # czterowymiarowego wektora x do jednowymiarowego, o wymiarze 512
+        ret1 = ((a.sum(axis=0)).mean(axis=0)).mean(axis=0)
+
+        # wektor 'ret' to wersja przy podziale wektora x na 3 czesci, rozmiar 512*3 = 1536
+        up = (a[0][0:4].mean(axis=0)).mean(axis=0)
+        mid = (a[0][4:10].mean(axis=0)).mean(axis=0)
+        down = (a[0][10:14].mean(axis=0)).mean(axis=0)
+        ret = np.concatenate((up, mid, down), axis=0)
+        # wektor 'ret2' to wersja druga podziału wektora x na 3 części, rozmiar 512*3 = 1536
+        up2 = ((a[0].mean(axis=0))[0:4]).mean(axis=0)
+        mid2 = ((a[0].mean(axis=0))[4:10]).mean(axis=0)
+        down2 = ((a[0].mean(axis=0))[10:14]).mean(axis=0)
+        ret2 = np.concatenate((up2, mid2, down2), axis=0)
+        return ret
 
     # build tree from persons who are outside vectors
     def build_treeIn(self):

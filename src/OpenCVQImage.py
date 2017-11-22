@@ -74,7 +74,7 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
         global capture_thread
         if capture_thread is None or capture_thread._is_stopped:
             capture_thread = threading.Thread(target=run_video_counter,
-                                              args=(1, frame_queue, video_width, video_height, 30, True))
+                                              args=(0, frame_queue, video_width, video_height, 30, True))
             capture_thread.start()
 
         self.startButton.setEnabled(False)
