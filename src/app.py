@@ -14,8 +14,8 @@ running = True
 
 # known direction, posture to classify
 
-def run_video_counter(cam, queue, width, height, fps, gui):
-    trans = Transform.Transform(0)
+def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
+    trans = Transform.Transform(0, layer_name)
     counter = Counter.Counter('left')  # or 'right'
     cnt_left = 0
     cnt_right = 0
@@ -29,14 +29,10 @@ def run_video_counter(cam, queue, width, height, fps, gui):
                                    "../caffe/MobileNetSSD_deploy.caffemodel")
 
     # wczytanie filmu
-    cap = cv2.VideoCapture('../mov/schody_2.mov')
-    #    cap = cv2.VideoCapture('../mov/IMG_1652.MOV')
-    #cap = cv2.VideoCapture(cam)
-    for i in range(19):
-        print(i, cap.get(i))
+    cap = cv2.VideoCapture(cam)
 
-    w = cap.get(3)
-    h = cap.get(4)
+    w = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
     frameArea = h * w
     areaTH = frameArea / 20  # frameArea/250
     areaMaxTH = frameArea / 2
@@ -232,6 +228,8 @@ def run_video_counter(cam, queue, width, height, fps, gui):
                 k = cv2.waitKey(30) & 0xff
                 if k == 27:
                     break
+            if not cap.isOpened():
+                break
         else:
             break
 
@@ -240,4 +238,5 @@ def run_video_counter(cam, queue, width, height, fps, gui):
 
 
 if __name__ == '__main__':
-    run_video_counter(cam=0, queue=queue.Queue(), width=None, height=None, fps=None, gui=False)
+    run_video_counter(cam=0, queue=queue.Queue(), width=None, height=None, fps=None, gui=False,
+                      layer_name='block4_pool')

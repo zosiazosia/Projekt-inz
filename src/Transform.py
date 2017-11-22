@@ -1,3 +1,5 @@
+import logging
+
 from keras.applications.vgg19 import VGG19
 from keras.preprocessing import image
 from keras.applications.vgg19 import preprocess_input
@@ -11,18 +13,31 @@ import os
 from scipy import spatial
 import sys
 
+import logging
+
+logger = logging.getLogger('recognition')
+hdlr = logging.FileHandler('../logs/myapp.log')
+hdlr.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+hdlr.setFormatter(formatter)
+logger.addHandler(hdlr)
+
+
 
 class Transform:
-    def __init__(self, id):
+    def __init__(self, id, layer_name):
         self.id = id
         self.base_model = VGG19(weights='imagenet')
-        self.model = Model(inputs=self.base_model.input, outputs=self.base_model.get_layer('block4_pool').output)
+        self.model = Model(inputs=self.base_model.input, outputs=self.base_model.get_layer(layer_name).output)
         self.treeIn = []  # for deciding about person who's coming in
         self.treeOut = []  # for deciding about person who's coming out
         self.indexesIn = []
         self.indexesOut = []
         self.personsIn = []
         self.personsOut = []
+        self.logger = logging.getLogger('recognition')
+        self.logger.setLevel(logging.INFO)
+        logger.info("layer_name: %s", layer_name)
 
     def transform(self, imgT):
         x = image.img_to_array(imgT)
@@ -81,6 +96,7 @@ class Transform:
                     i = self.getIndexByPid(pers, self.personsOut)
                     ps = self.personsOut.pop(i)
                     print("coming in reidentified as ", ps.getId())
+                    self.logger.info('in %s', str(ps.getId()))
                     counter.reid_in()
             self.personsIn.append(ps)
             ps.addVectors(posture.getVectors())
@@ -95,6 +111,7 @@ class Transform:
                 i = self.getIndexByPid(pers, self.personsIn)
                 ps = self.personsIn.pop(i)
                 print("coming out reidentified as ", ps.getId())
+                self.logger.info('out %s', str(ps.getId()))
                 counter.reid_out()
                 self.personsOut.append(ps)
                 ps.addVectors(posture.getVectors())
