@@ -14,6 +14,8 @@ import sys
 running = True
 
 # known direction, posture to classify
+model_size_x = 224
+model_size_y = 224
 
 def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
     trans = Transform.Transform(0, layer_name)
@@ -147,7 +149,7 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
 
                                 if p.getState() != '1':
                                     try:
-                                        imgT = cv2.resize(img, (224, 224))
+                                        imgT = cv2.resize(img, (model_size_x, model_size_y))
                                         vector = trans.transform(imgT)
                                         p.addVector(vector)
                                     except:
