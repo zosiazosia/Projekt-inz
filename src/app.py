@@ -1,3 +1,4 @@
+import logging
 import queue
 
 import numpy as np
@@ -233,6 +234,9 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
         else:
             break
 
+    logger = logging.getLogger('recognition')
+    logger.setLevel(logging.INFO)
+    logger.info(counter.generate_report() + "cnt_left: " + str(cnt_left) + "cnt_right: " + str(cnt_right))
     cap.release()
     cv2.destroyAllWindows()
 

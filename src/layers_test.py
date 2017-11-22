@@ -1,6 +1,8 @@
 import logging
 import queue
 
+from keras.applications import VGG19
+
 from app import run_video_counter
 
 layers = ['input_1', 'block1_conv1', 'block1_conv2', 'block1_pool']
@@ -23,6 +25,8 @@ logger.addHandler(fh)
 logger.addHandler(ch)
 
 if __name__ == '__main__':
-    for layer in layers:
-        run_video_counter(cam='../mov/schody_2.mov', queue=queue.Queue(), width=None, height=None, fps=None, gui=False,
-                          layer_name=layer)
+    base_model = VGG19(weights='imagenet')
+    for layer in base_model.layers:
+        if layer.name != 'input_1':
+            run_video_counter(cam='../mov/schody_2.mov', queue=queue.Queue(),
+                              width=None, height=None, fps=None, gui=False, layer_name=layer.name)

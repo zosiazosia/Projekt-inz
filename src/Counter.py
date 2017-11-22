@@ -40,3 +40,8 @@ class Counter:
 
     def getInDirection(self):
         return self.inDirection
+
+    def generate_report(self):
+        info = "came_in: " + str(self.getCameIn) + "came_out: " + str(self.getCameOut()) + "reid_in: " + str(
+            self.getReidentIn()) + "reid_out: " + str(self.getReidentOut()) + "inside: " + str(self.getAreInside())
+        return info
