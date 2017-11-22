@@ -22,12 +22,11 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
     counter = Counter.Counter('left')  # or 'right'
     cnt_left = 0
     cnt_right = 0
-    CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
-               "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
-               "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
-               "sofa", "train", "tvmonitor"]
     PERSON = 15
-    COLORS = np.random.uniform(0, 255, size=(len(CLASSES), 3))
+    PERSON_STRING = "Person"
+    RED_COLOR = (255, 0, 0)
+    BLUE_COLOR = (0, 0, 255)
+    GREEN_COLOR = (0, 255, 0)
     net = cv2.dnn.readNetFromCaffe("../caffe/MobileNetSSD_deploy.prototxt.txt",
                                    "../caffe/MobileNetSSD_deploy.caffemodel")
 
@@ -36,24 +35,16 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
 
     w = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-    frameArea = h * w
-    areaTH = frameArea / 20  # frameArea/250
-    areaMaxTH = frameArea / 2
-    areaMaxWidth = w / 2
-    areaMaxHeight = h / 2
-    print('Area Threshold', areaTH)
 
-    # #rysowanie linii
+    # limit lines
     line_left = int(2 * (w / 5))
     line_right = int(3 * (w / 5))
 
     left_limit = int(1 * (w / 5))
     right_limit = int(4 * (w / 5))
 
-    print("Red line y:", str(line_right))
-    print("Blue line y:", str(line_left))
-    line_down_color = (255, 0, 0)
-    line_up_color = (0, 0, 255)
+    line_left_color = RED_COLOR
+    line_right_color = BLUE_COLOR
     pt1 = [line_right, 0]
     pt2 = [line_right, h]
     pts_L1 = np.array([pt1, pt2], np.int32)
@@ -77,9 +68,7 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
     postures = []  # list of active postures
     persons = []
     pid = 0
-    img_counter = 0
-    frame_num = 0
-
+    # frame_num = 0
     global running
     if not gui:
         running = cap.isOpened()
@@ -93,9 +82,8 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
             #  frame_num += 1
             #  if frame_num % 2:
             #      continue
-            frame_num += 1
-            if frame_num % 2:
-                continue
+
+            # save height and width of a frame
             (h1, w1) = frame.shape[:2]
             blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 0.007843, (300, 300), 127.5)
             net.setInput(blob)
@@ -117,13 +105,13 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                     (startX, startY, endX, endY) = box.astype("int")
 
                     # display the prediction
-                    label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
-                    cv2.rectangle(frame, (startX, startY), (endX, endY), COLORS[idx], 2)
+                    label = "{}: {:.2f}%".format(PERSON_STRING, confidence * 100)
+                    cv2.rectangle(frame, (startX, startY), (endX, endY), GREEN_COLOR, 2)
                     y = startY - 15 if startY - 15 > 15 else startY + 15
                     cv2.putText(frame, label, (startX, y),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, GREEN_COLOR, 2)
 
-                    # współrzędne środka masy
+                    # współrzędne środka prostokąta
                     cx = int((endX - startX) / 2 + startX)
                     cy = int((endY - startY) / 2 + startY)
 
@@ -140,13 +128,13 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
 
                                 img = frame[startY:endY, startX:endX]
                                 label = "cx%d cy%d time: %d" % (cx, cy, p.getLastTime())
-                                cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+                                cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, GREEN_COLOR, 2)
                                 posture_id = '%d' % p.getId()
-                                cv2.putText(frame, posture_id, (cx + 2, cy), cv2.FONT_HERSHEY_SIMPLEX, 3, COLORS[idx],
+                                cv2.putText(frame, posture_id, (cx + 2, cy), cv2.FONT_HERSHEY_SIMPLEX, 3, GREEN_COLOR,
                                             2)
 
-                                posture_id = p.getId()
-
+                                # posture_id = p.getId()
+                                # if posture passed and is counted
                                 if p.getState() != '1':
                                     try:
                                         imgT = cv2.resize(img, (model_size_x, model_size_y))
@@ -156,7 +144,6 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                                         print("Unexpected error:", sys.exc_info()[0])
 
                                 # cv2.imwrite("../out/person%d-%d.png" % (posture_id, img_counter), img)
-                                img_counter += 1
 
                                 new = False
 
@@ -192,8 +179,6 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                             # rebuild tree -> new posture has to be classified
                             # if len(persons) != 0:
                             #     trans.build_tree(persons)
-
-                            # img_counter = 0
                             pid += 1
 
                         cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
@@ -207,8 +192,8 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
             str_rein = 'RE_IN: ' + str(counter.getReidentIn())
             str_reout = 'RE_OUT: ' + str(counter.getReidentOut())
             str_inside = 'INSIDE: ' + str(counter.getAreInside())
-            frame = cv2.polylines(frame, [pts_L1], False, line_down_color, thickness=2)
-            frame = cv2.polylines(frame, [pts_L2], False, line_up_color, thickness=2)
+            frame = cv2.polylines(frame, [pts_L1], False, line_left_color, thickness=2)
+            frame = cv2.polylines(frame, [pts_L2], False, line_right_color, thickness=2)
             frame = cv2.polylines(frame, [pts_L3], False, (255, 255, 255), thickness=1)
             frame = cv2.polylines(frame, [pts_L4], False, (255, 255, 255), thickness=1)
             cv2.putText(frame, str_up, (10, 40), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
