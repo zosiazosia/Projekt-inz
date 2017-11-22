@@ -1,3 +1,4 @@
+import logging
 import queue
 
 import numpy as np
@@ -13,9 +14,11 @@ import sys
 running = True
 
 # known direction, posture to classify
+model_size_x = 224
+model_size_y = 224
 
-def run_video_counter(cam, queue, width, height, fps, gui):
-    trans = Transform.Transform(0)
+def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
+    trans = Transform.Transform(0, layer_name)
     counter = Counter.Counter('left')  # or 'right'
     cnt_left = 0
     cnt_right = 0
@@ -28,13 +31,10 @@ def run_video_counter(cam, queue, width, height, fps, gui):
                                    "../caffe/MobileNetSSD_deploy.caffemodel")
 
     # wczytanie filmu
-    cap = cv2.VideoCapture('../mov/schody_2.mov')
-    #cap = cv2.VideoCapture(cam)
-    for i in range(19):
-        print(i, cap.get(i))
+    cap = cv2.VideoCapture(cam)
 
-    w = cap.get(3)
-    h = cap.get(4)
+    w = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
     # limit lines
     line_left = int(2 * (w / 5))
@@ -69,7 +69,6 @@ def run_video_counter(cam, queue, width, height, fps, gui):
     persons = []
     pid = 0
     # frame_num = 0
-
     global running
     if not gui:
         running = cap.isOpened()
@@ -138,7 +137,7 @@ def run_video_counter(cam, queue, width, height, fps, gui):
                                 # if posture passed and is counted
                                 if p.getState() != '1':
                                     try:
-                                        imgT = cv2.resize(img, (224, 224))
+                                        imgT = cv2.resize(img, (model_size_x, model_size_y))
                                         vector = trans.transform(imgT)
                                         p.addVector(vector)
                                     except:
@@ -217,12 +216,18 @@ def run_video_counter(cam, queue, width, height, fps, gui):
                 k = cv2.waitKey(30) & 0xff
                 if k == 27:
                     break
+            if not cap.isOpened():
+                break
         else:
             break
 
+    logger = logging.getLogger('recognition')
+    logger.setLevel(logging.INFO)
+    logger.info(counter.generate_report() + "cnt_left: " + str(cnt_left) + "cnt_right: " + str(cnt_right))
     cap.release()
     cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':
-    run_video_counter(cam=0, queue=queue.Queue(), width=None, height=None, fps=None, gui=False)
+    run_video_counter(cam=0, queue=queue.Queue(), width=None, height=None, fps=None, gui=False,
+                      layer_name='block4_pool')
