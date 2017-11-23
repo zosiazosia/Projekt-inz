@@ -1,5 +1,6 @@
 import logging
 
+from keras.applications import MobileNet
 from keras.applications.vgg19 import VGG19
 from keras.preprocessing import image
 from keras.applications.vgg19 import preprocess_input
@@ -23,7 +24,8 @@ logger.addHandler(hdlr)
 class Transform:
     def __init__(self, id, layer_name):
         self.id = id
-        self.base_model = VGG19(weights='imagenet')
+        self.base_model = MobileNet(weights='imagenet')
+        # self.base_model = VGG19(weights='imagenet')
         self.model = Model(inputs=self.base_model.input, outputs=self.base_model.get_layer(layer_name).output)
         self.treeIn = []  # for deciding about person who's coming in
         self.treeOut = []  # for deciding about person who's coming out

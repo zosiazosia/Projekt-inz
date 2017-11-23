@@ -1,7 +1,7 @@
 import logging
 import queue
 
-from keras.applications import VGG19
+from keras.applications import VGG19, MobileNet
 
 from app import run_video_counter
 
@@ -25,7 +25,8 @@ logger.addHandler(fh)
 logger.addHandler(ch)
 
 if __name__ == '__main__':
-    base_model = VGG19(weights='imagenet')
+    base_model = MobileNet(weights='imagenet')
+    logger.info("model: %s", base_model.name)
     for layer in base_model.layers:
         if layer.name != 'input_1':
             run_video_counter(cam='../mov/schody_2.mov', queue=queue.Queue(),
