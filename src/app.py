@@ -68,7 +68,6 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
     postures = []  # list of active postures
     persons = []
     pid = 0
-    # frame_num = 0
     global running
     if not gui:
         running = cap.isOpened()
@@ -76,7 +75,6 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
     # for each frame
     while running:
         ret, frame = cap.read()
-
         if ret:
             # co druga ramka
             #  frame_num += 1
@@ -105,11 +103,11 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                     (startX, startY, endX, endY) = box.astype("int")
 
                     # display the prediction
-                    label = "{}: {:.2f}%".format(PERSON_STRING, confidence * 100)
+                    # label = "{}: {:.2f}%".format(PERSON_STRING, confidence * 100)
                     cv2.rectangle(frame, (startX, startY), (endX, endY), GREEN_COLOR, 2)
-                    y = startY - 15 if startY - 15 > 15 else startY + 15
-                    cv2.putText(frame, label, (startX, y),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, GREEN_COLOR, 2)
+                    # y = startY - 15 if startY - 15 > 15 else startY + 15
+                    # cv2.putText(frame, label, (startX, y),
+                    #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, GREEN_COLOR, 2)
 
                     # współrzędne środka prostokąta
                     cx = int((endX - startX) / 2 + startX)
@@ -122,18 +120,16 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                         for p in postures:
 
                             now = int(time.strftime('%M%S'))
-                            if abs(cx - p.getX()) <= 80 and abs(cy - p.getY()) <= 150 \
-                                    and (abs(now - int(p.getLastTime())) <= 3 or abs(
-                                            now - int(p.getLastTime())) >= 5958):
-                                # if abs(cx - p.getX()) <= 150 and abs(cy - p.getY()) <= 100 \
-                                #         and (abs(now - int(p.getLastTime())) <= 2 or abs(
-                                #                 now - int(p.getLastTime())) >= 5958):
+
+                            if abs(cx - p.getX()) <= w / 5 and abs(cy - p.getY()) <= h / 4 \
+                                    and (abs(now - int(p.getLastTime())) <= 4 or abs(
+                                            now - int(p.getLastTime())) >= 5955):
 
                                 img = frame[startY:endY, startX:endX]
-                                label = "cx%d cy%d time: %d" % (cx, cy, p.getLastTime())
-                                cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, GREEN_COLOR, 2)
+                                # label = "cx%d cy%d time: %d" % (cx, cy, p.getLastTime())
+                                # cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, GREEN_COLOR, 2)
                                 posture_id = '%d' % p.getId()
-                                cv2.putText(frame, posture_id, (cx + 2, cy), cv2.FONT_HERSHEY_SIMPLEX, 3, GREEN_COLOR,
+                                cv2.putText(frame, posture_id, (cx + 2, cy), cv2.FONT_HERSHEY_SIMPLEX, 1.5, GREEN_COLOR,
                                             2)
 
                                 # if posture is not yet counted and has not more than 10 vectors
@@ -231,5 +227,5 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
 
 
 if __name__ == '__main__':
-    run_video_counter(cam="../mov/schody_2.mov", queue=queue.Queue(), width=None, height=None, fps=None, gui=False,
+    run_video_counter(cam='../mov/Sekcja_2.mov', queue=queue.Queue(), width=None, height=None, fps=None, gui=False,
                       layer_name='block4_pool')
