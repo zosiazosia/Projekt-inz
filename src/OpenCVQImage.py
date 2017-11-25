@@ -77,6 +77,7 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
                                               args=(
                                               '../mov/Sekcja_2.mov', frame_queue, video_width, video_height, 30, True,
                                               'block4_pool'))
+
             capture_thread.start()
 
         self.startButton.setEnabled(False)

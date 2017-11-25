@@ -120,6 +120,7 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                         for p in postures:
 
                             now = int(time.strftime('%M%S'))
+
                             if abs(cx - p.getX()) <= w / 5 and abs(cy - p.getY()) <= h / 4 \
                                     and (abs(now - int(p.getLastTime())) <= 4 or abs(
                                             now - int(p.getLastTime())) >= 5955):
@@ -131,9 +132,8 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                                 cv2.putText(frame, posture_id, (cx + 2, cy), cv2.FONT_HERSHEY_SIMPLEX, 1.5, GREEN_COLOR,
                                             2)
 
-                                # posture_id = p.getId()
-                                # if posture passed and is counted
-                                if p.getState() != '1':
+                                # if posture is not yet counted and has not more than 10 vectors
+                                if p.getState() != '1' and len(p.getVectors()) < 10:
                                     try:
                                         imgT = cv2.resize(img, (model_size_x, model_size_y))
                                         vector = trans.transform(imgT)

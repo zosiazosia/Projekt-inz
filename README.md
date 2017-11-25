@@ -14,7 +14,8 @@ Do testowania innych rodzajów klasyfikacji ( wszystko w pliku Transform.py):
     ZOFIA EDITS: dodałam dwie możliwości w funkcji transform. pierwsza rozkłada na 3 części drugi wymiar wektora 'x' (0:4:10:14),
     druga rozkłada trzeci wymiar na 3 części (0:4:10:14).
     Mamy teraz 3 możliwości transformacji, zostaje przetestować która daje najlepsze wyniki
-- zmiana samej klasyfikacji: w funkcjach tree_decideIn i tree_decideOut
-    to co podajemy w nawiasie query powinno być może jakąś średnią wszystkich wektorów danej postaci a nie tylko pierwszym z nich
-    ewentualnie (może to byłoby nawet lepsze rozwiązanie) można robić takie zapytanie dla wszystkich wektorów
-   danej postaci po kolei i na tej podstawie decydować. Samo zapytanie do drzewa nie trwa raczej zbyt długo
+- zmiana samej klasyfikacji: w funkcji tree_decide:
+    możliwe do wyboru funkcje (jako return):
+        - self.mostFreqNearest(vectors, tree, indexes, direction) -> zwraca osobę, która najczęściej jest pierwsz na liście
+        - self.kMultiplyDistance(vectors, tree, indexes, direction, 5) -> zwraca osobę, która ma najmniejszą średnią odległość -> brane pod uwagę pierwsze k wektorów dla każdego z 10 zapisanych wektorów postaci
+
