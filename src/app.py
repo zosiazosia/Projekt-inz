@@ -122,9 +122,12 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                         for p in postures:
 
                             now = int(time.strftime('%M%S'))
-                            if abs(cx - p.getX()) <= 150 and abs(cy - p.getY()) <= 100 \
-                                    and (abs(now - int(p.getLastTime())) <= 2 or abs(
+                            if abs(cx - p.getX()) <= 80 and abs(cy - p.getY()) <= 150 \
+                                    and (abs(now - int(p.getLastTime())) <= 3 or abs(
                                             now - int(p.getLastTime())) >= 5958):
+                                # if abs(cx - p.getX()) <= 150 and abs(cy - p.getY()) <= 100 \
+                                #         and (abs(now - int(p.getLastTime())) <= 2 or abs(
+                                #                 now - int(p.getLastTime())) >= 5958):
 
                                 img = frame[startY:endY, startX:endX]
                                 label = "cx%d cy%d time: %d" % (cx, cy, p.getLastTime())
@@ -133,9 +136,8 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                                 cv2.putText(frame, posture_id, (cx + 2, cy), cv2.FONT_HERSHEY_SIMPLEX, 3, GREEN_COLOR,
                                             2)
 
-                                # posture_id = p.getId()
-                                # if posture passed and is counted
-                                if p.getState() != '1':
+                                # if posture is not yet counted and has not more than 10 vectors
+                                if p.getState() != '1' and len(p.getVectors()) < 10:
                                     try:
                                         imgT = cv2.resize(img, (model_size_x, model_size_y))
                                         vector = trans.transform(imgT)
@@ -229,5 +231,5 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
 
 
 if __name__ == '__main__':
-    run_video_counter(cam=0, queue=queue.Queue(), width=None, height=None, fps=None, gui=False,
+    run_video_counter(cam="../mov/schody_2.mov", queue=queue.Queue(), width=None, height=None, fps=None, gui=False,
                       layer_name='block4_pool')

@@ -1,8 +1,11 @@
 import logging
-
+from collections import Counter as pyCounter
+import operator
 from keras.applications.vgg19 import VGG19
 from keras.preprocessing import image
 from keras.applications.vgg19 import preprocess_input
+from keras.applications.resnet50 import preprocess_input, decode_predictions
+from keras.applications.resnet50 import ResNet50
 from keras.models import Model
 import numpy as np
 import Person
@@ -24,6 +27,7 @@ class Transform:
     def __init__(self, id, layer_name):
         self.id = id
         self.base_model = VGG19(weights='imagenet')
+        # self.base_model = ResNet50(weights='imagenet')
         self.model = Model(inputs=self.base_model.input, outputs=self.base_model.get_layer(layer_name).output)
         self.treeIn = []  # for deciding about person who's coming in
         self.treeOut = []  # for deciding about person who's coming out
@@ -31,6 +35,7 @@ class Transform:
         self.indexesOut = []
         self.personsIn = []
         self.personsOut = []
+        self.distThreshold = 2200  #threshold to decide if it is a new person
         self.logger = logging.getLogger('recognition')
         self.logger.setLevel(logging.INFO)
         logger.info("layer_name: %s", layer_name)
@@ -96,7 +101,7 @@ class Transform:
                 counter.come_in()
             else:
                 self.build_treeIn()
-                pers = self.tree_decideIn(posture.getVectors())
+                pers = self.tree_decide(posture.getVectors(), 'in')
                 print(pers)
                 if (pers == 'new'):
                     ps = Person.Person(len(self.personsIn))
@@ -117,7 +122,7 @@ class Transform:
                 print("nie może wychodzić, nikogo nie ma w środku :D")
             else:
                 self.build_treeOut()
-                pers = self.tree_decideOut(posture.getVectors())
+                pers = self.tree_decide(posture.getVectors(), 'out')
                 print(pers)
                 i = self.getIndexByPid(pers, self.personsIn)
                 ps = self.personsIn.pop(i)
@@ -127,41 +132,87 @@ class Transform:
                 self.personsOut.append(ps)
                 ps.addVectors(posture.getVectors())
 
-    # returns person's id
-    def tree_decideIn(self, vectors):
-        dist, ind = self.treeIn.query(vectors[0], k=7)
-        print(dist, ind)
-        for i in ind:
-            try:
-                print(self.indexesIn[i])
-            except:
-                print("Not so many vectors in tree:", sys.exc_info()[0])
+    # returns person's id or "new"
+    def tree_decide(self, vectors, direction):
 
-        # new person
-        if (dist[0] > 700):
-            return ("new")
-        # person reidentified
-        else:
-            return self.indexesIn[ind[0]]
+        if direction == 'in':
+            tree = self.treeIn
+            indexes = self.indexesIn
+        elif direction == 'out':
+            tree = self.treeOut
+            indexes = self.indexesOut
 
-    def tree_decideOut(self, vectors):
-        # distance and indexes from tree
-        dist, ind = self.treeOut.query(vectors[0], k=7)
-        print(dist, ind)
-        for i in ind:
-            try:
-                print(self.indexesOut[i])
-            except:
-                print("Not so many vectors in tree:", sys.exc_info()[0])
-        return self.indexesOut[ind[0]]
+        # return self.mostFreqNearest(vectors, tree, indexes, direction)
+        return self.kMultiplyDistance(vectors, tree, indexes, direction, 5)
 
+    def mostFreqNearest(self, vectors, tree, indexes, direction):
+        print("decyzja dla osoby")
+        nearests = []
+        minD = self.distThreshold
+        for vector in vectors:
+            dist, ind = tree.query(vector, k=10)  # k-nearest vectors
+            nearests.append(indexes[ind[0]])
 
-            # better classification
+            if dist[0] < minD:
+                minD = dist[0]
 
-    def classi(self):
-        p_id = []
-        i = 0
-        # for v in ind:
-        # nr = self.indexes[v]
+            # to potem do usunięcia - tylko w celach testowych
+            # dist - odległość, ind - określenie miejsca w drzewie, indexes określają id osoby do której przynależy wektor
+            print(dist, ind)
+            for i in ind:
+                try:
+                    print(indexes[i])
+                except:
+                    print("Not so many vectors in tree:", sys.exc_info()[0])
 
-        # i = i+1
+        # new person coming in
+        if direction == 'in':
+            if minD == self.distThreshold:
+                return "new"
+
+        print("najczęściej ", self.mostFrequent(nearests))
+        return self.mostFrequent(nearests)
+
+    def kMultiplyDistance(self, vectors, tree, indexes, direction, k):
+
+        print("decyzja dla osoby")
+        nearests = []
+        dictN = {}
+        minD = self.distThreshold
+        for vector in vectors:
+            dist, ind = tree.query(vector, k=k)  # k-nearest vectors
+            for x in range(0, k):
+                if indexes[ind[x]] not in dictN:
+                    dictN[indexes[ind[x]]] = (dist[x], 1)
+                else:
+                    dictN[indexes[ind[x]]] = (dictN[indexes[ind[x]]][0] + dist[x], dictN[indexes[ind[x]]][1] + 1)
+
+            if dist[0] < minD:
+                minD = dist[0]
+
+            # to potem do usunięcia - tylko w celach testowych
+            # dist - odległość, ind - określenie miejsca w drzewie, indexes określają id osoby do której przynależy wektor
+            print(dist, ind)
+            for i in ind:
+                try:
+                    print(indexes[i])
+                except:
+                    print("Not so many vectors in tree:", sys.exc_info()[0])
+
+        # new person coming in
+        if direction == 'in':
+            if minD == self.distThreshold:
+                return "new"
+
+        for key, value in dictN.items():
+            dictN[key] = value[0] / value[1]
+        print("średnie ", dictN)
+        nearest = sorted(dictN.items(), key=operator.itemgetter(1))[0][0]
+
+        print("najmniejsza średnia: ", nearest)
+        return nearest
+
+    def mostFrequent(self, nearests):
+        freqDict = dict(pyCounter(nearests))
+        sortFreq = sorted(freqDict.items(), key=operator.itemgetter(1))
+        return sortFreq[-1][0]
