@@ -11,7 +11,7 @@ layers = ['input_1', 'block1_conv1', 'block1_conv2', 'block1_pool']
 logger = logging.getLogger('recognition')
 logger.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages
-fh = logging.FileHandler('recognition.log')
+fh = logging.FileHandler('../logs/recognition.log')
 fh.setLevel(logging.DEBUG)
 # create console handler with a higher log level
 ch = logging.StreamHandler()

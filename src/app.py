@@ -219,14 +219,14 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                 frame_quantity += 1
                 k = cv2.waitKey(30) & 0xff
                 if k == 27:
-                    end_time = time.time()
                     break
             if not cap.isOpened():
-                end_time = time.time()
+
                 break
         else:
             break
 
+    end_time = time.time()
     time_elapsed = end_time - start_time
     logger = logging.getLogger('recognition')
     logger.info("Program has finished. Time " + str(time_elapsed) + "  frames:  " + str(frame_quantity))
