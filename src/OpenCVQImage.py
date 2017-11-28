@@ -1,3 +1,5 @@
+import os
+import time
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 import sys
 import cv2
@@ -68,6 +70,11 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(1)
 
+        self.start_time = None
+        self.end_time = None
+
+        self.number_of_frames = 0
+
     def start(self):
         global running
         running = True
@@ -77,6 +84,7 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
                                               args=(
                                               '../mov/Sekcja_2.mov', frame_queue, video_width, video_height, 30, True,
                                               'block4_pool'))
+            self.start_time = time.time()
 
             capture_thread.start()
 
@@ -88,6 +96,9 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
         running = False
         global capture_thread
         capture_thread.join()
+        frame_queue.queue.clear()
+        self.end_time = time.time()
+        elapsed_time = self.end_time - self.start_time
         self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
 
@@ -109,6 +120,18 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
             bpl = bpc * width
             image = QtGui.QImage(img.data, width, height, bpl, QtGui.QImage.Format_RGB888)
             self.ImgWidget.set_image(image)
+            self.number_of_frames += 1
+
+    def export_report(self):
+        if self.counter_result != None:
+            if not os.path.exists('../reports'):
+                os.makedirs('../reports')
+            file = open('../reports/report.txt', 'w')
+            text = "Podczas działania licznika do budynku weszło " + self.counter_result.getCameIn() + \
+                   " oraz wyszło " + self.counter_result.getCameOut() + "osób. \n" \
+                   + "Wśród nich " + self.counter_result.getReidentIn() + "powróciło do budynku. "
+            file.write(text)
+            file.close()
 
     def closeEvent(self, event):
         global running

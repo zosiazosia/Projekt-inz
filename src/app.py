@@ -72,6 +72,10 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
     if not gui:
         running = cap.isOpened()
 
+    start_time = time.time()
+    end_time = 0
+    frame_quantity = 0
+
     # for each frame
     while running:
         ret, frame = cap.read()
@@ -207,19 +211,27 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
             if gui:
                 if queue.qsize() < 10:
                     queue.put(frame)
+                    frame_quantity += 1
                 else:
-                    print(queue.qsize())
+                    print("app line 211: " + str(queue.qsize()))
             else:
                 cv2.imshow('Frame', frame)
+                frame_quantity += 1
                 k = cv2.waitKey(30) & 0xff
                 if k == 27:
+                    end_time = time.time()
                     break
             if not cap.isOpened():
+                end_time = time.time()
                 break
         else:
             break
 
+    time_elapsed = end_time - start_time
     logger = logging.getLogger('recognition')
+    logger.info("Program has finished. Time " + str(time_elapsed) + "  frames:  " + str(frame_quantity))
+    ftp = frame_quantity / time_elapsed
+    logger.info("FPT: " + str(ftp))
     logger.setLevel(logging.INFO)
     logger.info(counter.generate_report() + "cnt_left: " + str(cnt_left) + "cnt_right: " + str(cnt_right))
     cap.release()
