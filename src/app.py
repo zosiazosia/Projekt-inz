@@ -227,5 +227,10 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
 
 
 if __name__ == '__main__':
-    run_video_counter(cam='../mov/Sekcja_2.mov', queue=queue.Queue(), width=None, height=None, fps=None, gui=False,
-                      layer_name='block4_pool')
+    i = 0
+    layer = 'block1_conv1'
+    while i < 4:
+        print("Uruchominie nr: " + str(i) + "  warstwa: " + layer)
+        run_video_counter(cam='../mov/Sekcja_2.mov', queue=queue.Queue(), width=None, height=None, fps=None, gui=False,
+                          layer_name=layer)
+        i += 1
