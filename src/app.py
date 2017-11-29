@@ -230,8 +230,8 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
     time_elapsed = end_time - start_time
     logger = logging.getLogger('recognition')
     logger.info("Program has finished. Time " + str(time_elapsed) + "  frames:  " + str(frame_quantity))
-    ftp = frame_quantity / time_elapsed
-    logger.info("FPT: " + str(ftp))
+    fps = frame_quantity / time_elapsed
+    logger.info("FPS: " + str(fps))
     logger.setLevel(logging.INFO)
     logger.info(counter.generate_report() + "cnt_left: " + str(cnt_left) + "cnt_right: " + str(cnt_right))
     cap.release()
