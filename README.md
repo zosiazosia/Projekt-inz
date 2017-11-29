@@ -16,6 +16,6 @@ Do testowania innych rodzajów klasyfikacji ( wszystko w pliku Transform.py):
     Mamy teraz 3 możliwości transformacji, zostaje przetestować która daje najlepsze wyniki
 - zmiana samej klasyfikacji: w funkcji tree_decide:
     możliwe do wyboru funkcje (jako return):
-        - self.mostFreqNearest(vectors, tree, indexes, direction) -> zwraca osobę, która najczęściej jest pierwsz na liście
+        - self.mostFreqNearest(vectors, tree, indexes, direction) -> zwraca osobę, która najczęściej jest pierwsza na liście
         - self.kMultiplyDistance(vectors, tree, indexes, direction, 5) -> zwraca osobę, która ma najmniejszą średnią odległość -> brane pod uwagę pierwsze k wektorów dla każdego z 10 zapisanych wektorów postaci
 

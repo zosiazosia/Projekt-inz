@@ -142,11 +142,11 @@ class Transform:
             tree = self.treeOut
             indexes = self.indexesOut
 
-        # return self.mostFreqNearest(vectors, tree, indexes, direction)
-        return self.kMultiplyDistance(vectors, tree, indexes, direction, 5)
+        return self.mostFreqNearest(vectors, tree, indexes, direction)
+        # return self.kMultiplyDistance(vectors, tree, indexes, direction, 5)
 
     def mostFreqNearest(self, vectors, tree, indexes, direction):
-        print("decyzja dla osoby")
+        # print("decyzja dla osoby")
         nearests = []
         minD = self.distThreshold
         for vector in vectors:
@@ -158,24 +158,24 @@ class Transform:
 
             # to potem do usunięcia - tylko w celach testowych
             # dist - odległość, ind - określenie miejsca w drzewie, indexes określają id osoby do której przynależy wektor
-            print(dist, ind)
-            for i in ind:
-                try:
-                    print(indexes[i])
-                except:
-                    print("Not so many vectors in tree:", sys.exc_info()[0])
+                # print(dist, ind)
+                # for i in ind:
+                #     try:
+                #         print(indexes[i])
+                #     except:
+                #         print("Not so many vectors in tree:", sys.exc_info()[0])
 
         # new person coming in
         if direction == 'in':
             if minD == self.distThreshold:
                 return "new"
 
-        print("najczęściej ", self.mostFrequent(nearests))
+        # print("najczęściej ", self.mostFrequent(nearests))
         return self.mostFrequent(nearests)
 
     def kMultiplyDistance(self, vectors, tree, indexes, direction, k):
 
-        print("decyzja dla osoby")
+        # print("decyzja dla osoby")
         nearests = []
         dictN = {}
         minD = self.distThreshold
@@ -192,12 +192,12 @@ class Transform:
 
             # to potem do usunięcia - tylko w celach testowych
             # dist - odległość, ind - określenie miejsca w drzewie, indexes określają id osoby do której przynależy wektor
-            print(dist, ind)
-            for i in ind:
-                try:
-                    print(indexes[i])
-                except:
-                    print("Not so many vectors in tree:", sys.exc_info()[0])
+                # print(dist, ind)
+                # for i in ind:
+                #     try:
+                #         print(indexes[i])
+                #     except:
+                #         print("Not so many vectors in tree:", sys.exc_info()[0])
 
         # new person coming in
         if direction == 'in':
@@ -206,10 +206,10 @@ class Transform:
 
         for key, value in dictN.items():
             dictN[key] = value[0] / value[1]
-        print("średnie ", dictN)
+        # print("średnie ", dictN)
         nearest = sorted(dictN.items(), key=operator.itemgetter(1))[0][0]
 
-        print("najmniejsza średnia: ", nearest)
+        # print("najmniejsza średnia: ", nearest)
         return nearest
 
     def mostFrequent(self, nearests):
