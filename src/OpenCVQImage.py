@@ -1,12 +1,10 @@
-import datetime
 import os
-
-
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import sys
-import cv2
-import threading
 import queue
+import sys
+import threading
+
+import cv2
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 from app import run_video_counter
 
@@ -83,7 +81,7 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
             self.capture_thread = threading.Thread(target=run_video_counter,
                                               args=(
                                                   '../mov/Sekcja_2.mov', self.frame_queue, True,
-                                                  'block4_pool', self.count_direction, self.counter_queue,
+                                                  'block5_conv2', self.count_direction, self.counter_queue,
                                                   self.running_queue))
 
             self.capture_thread.start()
@@ -110,6 +108,8 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
             if not self.running:
                 grey_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
                 img = grey_img
+
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             height, width, bpc = img.shape
             bpl = bpc * width
@@ -153,6 +153,6 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
 
 app = QtWidgets.QApplication(sys.argv)
 w = MainWindow(None)
-w.setWindowTitle('Intelligent people counter')
+w.setWindowTitle('Inteligentny licznik osób')
 w.show()
 app.exec_()
