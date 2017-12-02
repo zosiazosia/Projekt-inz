@@ -187,8 +187,8 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
             else:
                 frame = write_result_on_frame(counter=counter, frame=frame, font=font)
 
-            counter_queue.put(counter)
-            frame = write_result_on_frame(counter=counter, frame=frame, font=font)
+            # counter_queue.put(counter)
+            # frame = write_result_on_frame(counter=counter, frame=frame, font=font)
 
             if gui:
                 if queue.qsize() < 10:
@@ -211,20 +211,20 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
 
     logger = logging.getLogger('recognition')
     logger.setLevel(logging.INFO)
-    logger.info(counter.generate_report() + "cnt_left: " + str(counter.regular_left) + "cnt_right: " + str(
-        counter.regular_right))
+    logger.info(counter.generate_report() + "cnt_left: " + counter.getRegularLeftString()
+                + "cnt_right: " + counter.getRegularRightString())
     cap.release()
     cv2.destroyAllWindows()
 
 
 def write_result_on_frame(counter, frame, font):
-    str_up = 'LEFT: ' + str(counter.regular_left)
-    str_down = 'RIGHT: ' + str(counter.regular_right)
-    str_in = 'IN: ' + str(counter.getCameIn())
-    str_out = 'OUT: ' + str(counter.getCameOut())
-    str_rein = 'RE_IN: ' + str(counter.getReidentIn())
-    str_reout = 'RE_OUT: ' + str(counter.getReidentOut())
-    str_inside = 'INSIDE: ' + str(counter.getAreInside())
+    str_up = 'LEFT: ' + counter.getRegularLeftString()
+    str_down = 'RIGHT: ' + counter.getRegularRightString()
+    str_in = 'IN: ' + counter.getCameInString()
+    str_out = 'OUT: ' + counter.getCameOutString()
+    str_rein = 'RE_IN: ' + counter.getReidentInString()
+    str_reout = 'RE_OUT: ' + counter.getReidentOutString()
+    str_inside = 'INSIDE: ' + counter.getAreInsideString()
 
     cv2.putText(frame, str_up, (10, 40), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
     cv2.putText(frame, str_up, (10, 40), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
