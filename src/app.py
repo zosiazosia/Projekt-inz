@@ -17,15 +17,12 @@ running = True
 model_size_x = 224
 model_size_y = 224
 
-def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
+
+def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, running_queue):
     trans = Transform.Transform(0, layer_name)
-    counter = Counter.Counter('left')  # or 'right'
-    cnt_left = 0
-    cnt_right = 0
+    counter = Counter.Counter(direction)  # or 'right'
     PERSON = 15
-    PERSON_STRING = "Person"
-    RED_COLOR = (255, 0, 0)
-    BLUE_COLOR = (0, 0, 255)
+
     GREEN_COLOR = (0, 255, 0)
     net = cv2.dnn.readNetFromCaffe("../caffe/MobileNetSSD_deploy.prototxt.txt",
                                    "../caffe/MobileNetSSD_deploy.caffemodel")
@@ -43,32 +40,18 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
     left_limit = int(1 * (w / 5))
     right_limit = int(4 * (w / 5))
 
-    line_left_color = RED_COLOR
-    line_right_color = BLUE_COLOR
-    pt1 = [line_right, 0]
-    pt2 = [line_right, h]
-    pts_L1 = np.array([pt1, pt2], np.int32)
-    pts_L1 = pts_L1.reshape((-1, 1, 2))
-    pt3 = [line_left, 0]
-    pt4 = [line_left, h]
-    pts_L2 = np.array([pt3, pt4], np.int32)
-    pts_L2 = pts_L2.reshape((-1, 1, 2))
 
-    pt5 = [left_limit, 0]
-    pt6 = [left_limit, h]
-    pts_L3 = np.array([pt5, pt6], np.int32)
-    pts_L3 = pts_L3.reshape((-1, 1, 2))
-    pt7 = [right_limit, 0]
-    pt8 = [right_limit, h]
-    pts_L4 = np.array([pt7, pt8], np.int32)
-    pts_L4 = pts_L4.reshape((-1, 1, 2))
+
 
     # Variables
     font = cv2.FONT_HERSHEY_SIMPLEX
-    postures = []  # list of active postures
+
+    # list of active postures
+    postures = []
     persons = []
     pid = 0
-    global running
+    running = True
+
     if not gui:
         running = cap.isOpened()
 
@@ -104,7 +87,8 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
 
                     # display the prediction
                     # label = "{}: {:.2f}%".format(PERSON_STRING, confidence * 100)
-                    cv2.rectangle(frame, (startX, startY), (endX, endY), GREEN_COLOR, 2)
+                    if not gui:
+                        cv2.rectangle(frame, (startX, startY), (endX, endY), GREEN_COLOR, 2)
                     # y = startY - 15 if startY - 15 > 15 else startY + 15
                     # cv2.putText(frame, label, (startX, y),
                     #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, GREEN_COLOR, 2)
@@ -129,8 +113,9 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                                 # label = "cx%d cy%d time: %d" % (cx, cy, p.getLastTime())
                                 # cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, GREEN_COLOR, 2)
                                 posture_id = '%d' % p.getId()
-                                cv2.putText(frame, posture_id, (cx + 2, cy), cv2.FONT_HERSHEY_SIMPLEX, 1.5, GREEN_COLOR,
-                                            2)
+                                if not gui:
+                                    cv2.putText(frame, posture_id, (cx + 2, cy),
+                                                cv2.FONT_HERSHEY_SIMPLEX, 1.5, GREEN_COLOR, 2)
 
                                 # if posture is not yet counted and has not more than 10 vectors
                                 if p.getState() != '1' and len(p.getVectors()) < 10:
@@ -148,22 +133,15 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                                 p.addCoords(cx, cy)
                                 if p.going_IN(line_left, line_right, counter):
                                     trans.classify(p, counter)
-
-                                    cnt_left += 1
+                                    counter.increase_regular_left()
                                     print("ID:", p.getId(), 'crossed going left at', time.strftime("%c"))
 
                                 elif p.going_OUT(line_left, line_right, counter):
                                     trans.classify(p, counter)
-
-                                    cnt_right += 1
+                                    counter.increase_regular_right()
                                     print("ID:", p.getId(), 'crossed going right at', time.strftime("%c"))
 
                                 break
-                            # if p.getState() == '1':
-                            #     if p.getDir() == 'right' and p.getX() > right_limit:
-                            #         p.setDone()
-                            #     elif p.getDir() == 'left' and p.getX() < left_limit:
-                            #         p.setDone()
 
                             # posture outside white space
                             if p.getState() == "1" or p.getX() > right_limit or p.getX() < left_limit:
@@ -179,30 +157,16 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                             #     trans.build_tree(persons)
                             pid += 1
 
-                        cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
-            for i in postures:
-                cv2.putText(frame, str(i.getId()), (i.getX(), i.getY()), font, 0.3, i.getRGB(), 1, cv2.LINE_AA)
+                        if not gui:
+                            cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
 
-            str_up = 'LEFT: ' + str(cnt_left)
-            str_down = 'RIGHT: ' + str(cnt_right)
-            str_in = 'IN: ' + str(counter.getCameIn())
-            str_out = 'OUT: ' + str(counter.getCameOut())
-            str_rein = 'RE_IN: ' + str(counter.getReidentIn())
-            str_reout = 'RE_OUT: ' + str(counter.getReidentOut())
-            str_inside = 'INSIDE: ' + str(counter.getAreInside())
-            frame = cv2.polylines(frame, [pts_L1], False, line_left_color, thickness=2)
-            frame = cv2.polylines(frame, [pts_L2], False, line_right_color, thickness=2)
-            frame = cv2.polylines(frame, [pts_L3], False, (255, 255, 255), thickness=1)
-            frame = cv2.polylines(frame, [pts_L4], False, (255, 255, 255), thickness=1)
-            cv2.putText(frame, str_up, (10, 40), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-            cv2.putText(frame, str_up, (10, 40), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-            cv2.putText(frame, str_down, (10, 70), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-            cv2.putText(frame, str_down, (10, 70), font, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
-            cv2.putText(frame, str_in, (10, 100), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-            cv2.putText(frame, str_out, (10, 130), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-            cv2.putText(frame, str_rein, (10, 160), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-            cv2.putText(frame, str_reout, (10, 190), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-            cv2.putText(frame, str_inside, (10, 220), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+            if gui:
+                counter_queue.put(counter)
+            else:
+                frame = write_result_on_frame(counter=counter, frame=frame, font=font, line_right=line_right,
+                                              line_left=line_left, left_limit=left_limit, right_limit=right_limit, h=h)
+                for i in postures:
+                    cv2.putText(frame, str(i.getId()), (i.getX(), i.getY()), font, 0.3, i.getRGB(), 1, cv2.LINE_AA)
 
             if gui:
                 if queue.qsize() < 10:
@@ -216,16 +180,72 @@ def run_video_counter(cam, queue, width, height, fps, gui, layer_name):
                     break
             if not cap.isOpened():
                 break
+
+            if not running_queue.empty():
+                running = running_queue.get()
+
         else:
             break
 
     logger = logging.getLogger('recognition')
     logger.setLevel(logging.INFO)
-    logger.info(counter.generate_report() + "cnt_left: " + str(cnt_left) + "cnt_right: " + str(cnt_right))
+    logger.info(counter.generate_report() + "cnt_left: " + counter.getRegularLeftString()
+                + "cnt_right: " + counter.getRegularRightString())
     cap.release()
     cv2.destroyAllWindows()
 
 
+def write_result_on_frame(counter, frame, font, line_right, line_left, left_limit, right_limit, h, ):
+    RED_COLOR = (255, 0, 0)
+    BLUE_COLOR = (0, 0, 255)
+    line_left_color = RED_COLOR
+    line_right_color = BLUE_COLOR
+
+    pt1 = [line_right, 0]
+    pt2 = [line_right, h]
+    pts_L1 = np.array([pt1, pt2], np.int32)
+    pts_L1 = pts_L1.reshape((-1, 1, 2))
+    pt3 = [line_left, 0]
+    pt4 = [line_left, h]
+    pts_L2 = np.array([pt3, pt4], np.int32)
+    pts_L2 = pts_L2.reshape((-1, 1, 2))
+
+    pt5 = [left_limit, 0]
+    pt6 = [left_limit, h]
+    pts_L3 = np.array([pt5, pt6], np.int32)
+    pts_L3 = pts_L3.reshape((-1, 1, 2))
+    pt7 = [right_limit, 0]
+    pt8 = [right_limit, h]
+    pts_L4 = np.array([pt7, pt8], np.int32)
+    pts_L4 = pts_L4.reshape((-1, 1, 2))
+
+    frame = cv2.polylines(frame, [pts_L1], False, line_left_color, thickness=2)
+    frame = cv2.polylines(frame, [pts_L2], False, line_right_color, thickness=2)
+    frame = cv2.polylines(frame, [pts_L3], False, (255, 255, 255), thickness=1)
+    frame = cv2.polylines(frame, [pts_L4], False, (255, 255, 255), thickness=1)
+
+
+    str_up = 'LEFT: ' + counter.getRegularLeftString()
+    str_down = 'RIGHT: ' + counter.getRegularRightString()
+    str_in = 'IN: ' + counter.getCameInString()
+    str_out = 'OUT: ' + counter.getCameOutString()
+    str_rein = 'RE_IN: ' + counter.getReidentInString()
+    str_reout = 'RE_OUT: ' + counter.getReidentOutString()
+    str_inside = 'INSIDE: ' + counter.getAreInsideString()
+
+    cv2.putText(frame, str_up, (10, 40), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+    cv2.putText(frame, str_up, (10, 40), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+    cv2.putText(frame, str_down, (10, 70), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+    cv2.putText(frame, str_down, (10, 70), font, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+    cv2.putText(frame, str_in, (10, 100), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+    cv2.putText(frame, str_out, (10, 130), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+    cv2.putText(frame, str_rein, (10, 160), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+    cv2.putText(frame, str_reout, (10, 190), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+    cv2.putText(frame, str_inside, (10, 220), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+    return frame
+
+
 if __name__ == '__main__':
-    run_video_counter(cam='../mov/Sekcja_2.mov', queue=queue.Queue(), width=None, height=None, fps=None, gui=False,
-                      layer_name='block4_pool')
+    run_video_counter(cam='../mov/Sekcja_2.mov', queue=queue.Queue(), gui=False,
+                      layer_name='block5_conv2', direction='left', counter_queue=queue.Queue(),
+                      running_queue=queue.Queue())

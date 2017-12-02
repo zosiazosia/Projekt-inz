@@ -1,18 +1,14 @@
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import sys
-import cv2
-import threading
+import os
 import queue
+import sys
+import threading
+
+import cv2
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 from app import run_video_counter
 
-running = False
-capture_thread = None
 form_class = uic.loadUiType("simple.ui")[0]
-frame_queue = queue.Queue()
-video_width = 1920
-video_height = 1080
-
 
 def grab_without_counter(cam, queue, width, height, fps, gui):
     global running
@@ -56,6 +52,7 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
         self.setupUi(self)
         self.startButton.clicked.connect(self.start)
         self.stopButton.clicked.connect(self.stop)
+        self.exportButton.clicked.connect(self.export_report)
         self.exportButton.setEnabled(False)
         self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
@@ -67,56 +64,95 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(1)
+        self.count_direction = 'left'
+        self.counter_queue = queue.Queue()
+        self.running_queue = queue.Queue()
+        self.running = False
+        self.capture_thread = None
+        self.frame_queue = queue.Queue()
+        self.counting_direction.enabled = True
+        self.counter_state = None
 
     def start(self):
-        global running
-        running = True
-        global capture_thread
-        if capture_thread is None or capture_thread._is_stopped:
-            capture_thread = threading.Thread(target=run_video_counter,
+        self.running = True
+        self.set_counting_direction()
+        if self.capture_thread is None or self.capture_thread._is_stopped:
+            self.capture_thread = None
+            self.capture_thread = threading.Thread(target=run_video_counter,
                                               args=(
-                                              '../mov/Sekcja_2.mov', frame_queue, video_width, video_height, 30, True,
-                                              'block4_pool'))
+                                                  '../mov/Sekcja_2.mov', self.frame_queue, True,
+                                                  'block5_conv2', self.count_direction, self.counter_queue,
+                                                  self.running_queue))
 
-            capture_thread.start()
+            self.capture_thread.start()
 
         self.startButton.setEnabled(False)
         self.stopButton.setEnabled(True)
+        self.exportButton.setEnabled(False)
+        self.counting_direction.setEnabled(False)
+
 
     def stop(self):
-        global running
-        running = False
-        global capture_thread
-        capture_thread.join()
+        self.running_queue.put(False)
+        self.running = False
+        self.capture_thread.join()
         self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
+        self.frame_queue.queue.clear()
+        self.counting_direction.setEnabled(True)
+        self.exportButton.setEnabled(True)
 
     def update_frame(self):
-        if not frame_queue.empty():
-            img = frame_queue.get()
+        if not self.frame_queue.empty():
+            img = self.frame_queue.get()
+            if not self.running:
+                grey_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+                img = grey_img
 
-            # img_height, img_width, img_colors = img.shape
-            # scale_w = float(self.window_width) / float(img_width)
-            # scale_h = float(self.window_height) / float(img_height)
-            # scale = min([scale_w, scale_h])
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-            # if scale == 0:
-            #                scale = 1
-
-            # img = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
-            # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             height, width, bpc = img.shape
             bpl = bpc * width
             image = QtGui.QImage(img.data, width, height, bpl, QtGui.QImage.Format_RGB888)
             self.ImgWidget.set_image(image)
 
+        if not self.counter_queue.empty():
+            self.counter_state = self.counter_queue.get()
+            self.counted_in.setText(self.counter_state.getRegularLeftString())
+            self.counted_out.setText(self.counter_state.getRegularRightString())
+            self.reident_in.setText(self.counter_state.getReidentInString())
+            self.reident_out.setText(self.counter_state.getReidentOutString())
+            self.inside.setText(self.counter_state.getAreInsideString())
+
+    def export_report(self):
+        filename = '../reports/report.txt'
+
+        if not os.path.exists('../reports'):
+            os.makedirs('../reports')
+        report_content = self.counter_state.generate_report()
+
+        with open(filename, "w+") as f:
+            f.write(report_content)
+            f.close()
+
+        self.exportButton.setEnabled(False)
+
     def closeEvent(self, event):
-        global running
-        running = False
+        self.running_queue.put(False)
+        self.running = False
+
+    def set_counting_direction(self):
+        self.count_direction = 'left'
+        if self.going_left.isChecked():
+            self.count_direction = 'left'
+        if self.going_right.isChecked():
+            self.count_direction = 'right'
+
+
 
 
 app = QtWidgets.QApplication(sys.argv)
 w = MainWindow(None)
-w.setWindowTitle('Inteligenty licznik osób')
+w.setWindowTitle('Inteligentny licznik osób')
 w.show()
 app.exec_()

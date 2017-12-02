@@ -29,4 +29,5 @@ if __name__ == '__main__':
     for layer in base_model.layers:
         if layer.name != 'input_1':
             run_video_counter(cam='../mov/schody_2.mov', queue=queue.Queue(),
-                              width=None, height=None, fps=None, gui=False, layer_name=layer.name)
+                              gui=False, layer_name=layer.name,
+                              direction='left', running_queue=queue.Queue(), counter_queue=queue.Queue())
