@@ -6,6 +6,8 @@ class Counter:
         self.reident_out = 0
         self.are_inside = 0
         self.inDirection = inDir  # 'left or 'right'
+        self.regular_left = 0
+        self.regular_right = 0
 
     def come_in(self):
         self.came_in += 1
@@ -45,3 +47,9 @@ class Counter:
         info = "came_in: " + str(self.getCameIn()) + ", came_out: " + str(self.getCameOut()) + ", reid_in: " + str(
             self.getReidentIn()) + ", reid_out: " + str(self.getReidentOut()) + ", inside: " + str(self.getAreInside())
         return info
+
+    def increase_regular_left(self):
+        self.regular_left += 1
+
+    def increase_regular_right(self):
+        self.regular_right += 1

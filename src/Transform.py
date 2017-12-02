@@ -2,6 +2,7 @@ import logging
 from collections import Counter as pyCounter
 import operator
 from keras.applications.vgg19 import VGG19
+from keras.backend import clear_session
 from keras.preprocessing import image
 from keras.applications.vgg19 import preprocess_input
 from keras.applications.resnet50 import preprocess_input, decode_predictions
@@ -11,7 +12,7 @@ import numpy as np
 import Person
 from scipy import spatial
 import sys
-
+import tensorflow
 import logging
 
 logger = logging.getLogger('recognition')
@@ -26,7 +27,10 @@ logger.addHandler(hdlr)
 class Transform:
     def __init__(self, id, layer_name):
         self.id = id
+        # tensorflow.keras.backend.clear_session()
+        clear_session()
         self.base_model = VGG19(weights='imagenet')
+        self.fdsa = VGG19(weights='imagenet')
         # self.base_model = ResNet50(weights='imagenet')
         self.model = Model(inputs=self.base_model.input, outputs=self.base_model.get_layer(layer_name).output)
         self.treeIn = []  # for deciding about person who's coming in

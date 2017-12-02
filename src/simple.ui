@@ -21,9 +21,9 @@
                 <property name="geometry">
                     <rect>
                         <x>10</x>
-                        <y>80</y>
-                        <width>621</width>
-                        <height>381</height>
+                        <y>100</y>
+                        <width>411</width>
+                        <height>361</height>
                     </rect>
                 </property>
                 <property name="sizePolicy">
@@ -51,7 +51,7 @@
                     <rect>
                         <x>10</x>
                         <y>20</y>
-                        <width>170</width>
+                        <width>200</width>
                         <height>41</height>
                     </rect>
                 </property>
@@ -64,7 +64,7 @@
                     <rect>
                         <x>230</x>
                         <y>20</y>
-                        <width>170</width>
+                        <width>200</width>
                         <height>41</height>
                     </rect>
                 </property>
@@ -75,15 +75,213 @@
             <widget class="QPushButton" name="exportButton">
                 <property name="geometry">
                     <rect>
-                        <x>440</x>
+                        <x>450</x>
                         <y>20</y>
-                        <width>170</width>
+                        <width>200</width>
                         <height>41</height>
                     </rect>
                 </property>
                 <property name="text">
                     <string>Export report</string>
                 </property>
+            </widget>
+            <widget class="QPushButton" name="exportButton_2">
+                <property name="geometry">
+                    <rect>
+                        <x>440</x>
+                        <y>110</y>
+                        <width>91</width>
+                        <height>21</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>counted in</string>
+                </property>
+            </widget>
+            <widget class="QPushButton" name="exportButton_3">
+                <property name="geometry">
+                    <rect>
+                        <x>440</x>
+                        <y>140</y>
+                        <width>91</width>
+                        <height>21</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>counetd out</string>
+                </property>
+            </widget>
+            <widget class="QPushButton" name="counted_in">
+                <property name="geometry">
+                    <rect>
+                        <x>550</x>
+                        <y>110</y>
+                        <width>31</width>
+                        <height>21</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>0</string>
+                </property>
+            </widget>
+            <widget class="QPushButton" name="exportButton_7">
+                <property name="geometry">
+                    <rect>
+                        <x>440</x>
+                        <y>170</y>
+                        <width>91</width>
+                        <height>21</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>reidentified in</string>
+                </property>
+            </widget>
+            <widget class="QPushButton" name="exportButton_8">
+                <property name="geometry">
+                    <rect>
+                        <x>440</x>
+                        <y>200</y>
+                        <width>91</width>
+                        <height>21</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>reidentified out</string>
+                </property>
+            </widget>
+            <widget class="QPushButton" name="exportButton_9">
+                <property name="geometry">
+                    <rect>
+                        <x>440</x>
+                        <y>230</y>
+                        <width>91</width>
+                        <height>21</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>inside</string>
+                </property>
+            </widget>
+            <widget class="QPushButton" name="counted_out">
+                <property name="geometry">
+                    <rect>
+                        <x>550</x>
+                        <y>140</y>
+                        <width>31</width>
+                        <height>21</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>0</string>
+                </property>
+            </widget>
+            <widget class="QPushButton" name="reident_in">
+                <property name="geometry">
+                    <rect>
+                        <x>550</x>
+                        <y>170</y>
+                        <width>31</width>
+                        <height>21</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>0</string>
+                </property>
+            </widget>
+            <widget class="QPushButton" name="reident_out">
+                <property name="geometry">
+                    <rect>
+                        <x>550</x>
+                        <y>200</y>
+                        <width>31</width>
+                        <height>21</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>0</string>
+                </property>
+            </widget>
+            <widget class="QPushButton" name="inside">
+                <property name="geometry">
+                    <rect>
+                        <x>550</x>
+                        <y>230</y>
+                        <width>31</width>
+                        <height>21</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>0</string>
+                </property>
+            </widget>
+            <widget class="QPushButton" name="exportButton_4">
+                <property name="geometry">
+                    <rect>
+                        <x>430</x>
+                        <y>300</y>
+                        <width>141</width>
+                        <height>21</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>going left == going inside</string>
+                </property>
+            </widget>
+            <widget class="QPushButton" name="exportButton_6">
+                <property name="geometry">
+                    <rect>
+                        <x>430</x>
+                        <y>330</y>
+                        <width>141</width>
+                        <height>21</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>going right == going inside</string>
+                </property>
+            </widget>
+            <widget class="QGroupBox" name="groupBox_2">
+                <property name="geometry">
+                    <rect>
+                        <x>580</x>
+                        <y>280</y>
+                        <width>51</width>
+                        <height>80</height>
+                    </rect>
+                </property>
+                <property name="title">
+                    <string>GroupBox</string>
+                </property>
+                <widget class="QCheckBox" name="checkBox_right">
+                    <property name="geometry">
+                        <rect>
+                            <x>20</x>
+                            <y>50</y>
+                            <width>70</width>
+                            <height>17</height>
+                        </rect>
+                    </property>
+                    <property name="text">
+                        <string/>
+                    </property>
+                    <property name="checked">
+                        <bool>true</bool>
+                    </property>
+                </widget>
+                <widget class="QCheckBox" name="checkBox_left">
+                    <property name="geometry">
+                        <rect>
+                            <x>20</x>
+                            <y>20</y>
+                            <width>70</width>
+                            <height>17</height>
+                        </rect>
+                    </property>
+                    <property name="text">
+                        <string/>
+                    </property>
+                </widget>
             </widget>
         </widget>
         <widget class="QMenuBar" name="menubar">
@@ -92,7 +290,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>658</width>
-                    <height>25</height>
+                    <height>21</height>
                 </rect>
             </property>
         </widget>
