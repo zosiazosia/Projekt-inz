@@ -67,7 +67,7 @@ class Counter:
                     % (self.getCameInString(), self.getCameOutString(), self.getReidentInString(),
                        self.getReidentOutString(), self.getAreInsideString())
 
-        return report_pl
+        return report_eng
 
     def increase_regular_left(self):
         self.regular_left += 1

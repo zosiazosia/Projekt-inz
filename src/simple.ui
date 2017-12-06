@@ -228,7 +228,7 @@
      </rect>
     </property>
     <property name="title">
-     <string>Counting direction</string>
+        <string>Kierunek liczenia</string>
     </property>
     <property name="checkable">
      <bool>false</bool>

@@ -146,8 +146,8 @@ class Transform:
             tree = self.treeOut
             indexes = self.indexesOut
 
-        # return self.mostFreqNearest(vectors, tree, indexes, direction)
-        return self.kMultiplyDistance(vectors, tree, indexes, direction, 5)
+        return self.mostFreqNearest(vectors, tree, indexes, direction)
+        # return self.kMultiplyDistance(vectors, tree, indexes, direction, 5)
 
     def mostFreqNearest(self, vectors, tree, indexes, direction):
         print("decyzja dla osoby")

@@ -1,0 +1,17 @@
+Czas rozpoczęcia sesji zliczającej: Mon Dec  4 20:39:36 2017
+ID: 0 - wejscie - Mon Dec  4 20:39:36 2017
+ID: 1 - wejscie - Mon Dec  4 20:39:57 2017
+ID: 2 - wejscie - Mon Dec  4 20:40:19 2017
+ID: 3 - wejscie - Mon Dec  4 20:40:37 2017
+ID: 0 - wyjscie - Mon Dec  4 20:40:54 2017
+ID: 2 - wyjscie - Mon Dec  4 20:41:09 2017
+ID: 3 - wyjscie - Mon Dec  4 20:41:27 2017
+ID: 1 - wyjscie - Mon Dec  4 20:41:43 2017
+
+Zakończenie sesji zliczajacej: Mon Dec  4 20:43:43 2017
+Końcowy stan licznika:
+Tradycyjny licznik osób: 4 osób weszło oraz 4 osób wyszło.
+
+Inteligentny licznik osób: 0 osób zostało zreidentyfikowanych wchodząc oraz 4 osób zostało zreidentyfikowanych wychodząc.
+Obecnie w środku znajduje się 0 osób.
+

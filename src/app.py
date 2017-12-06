@@ -19,6 +19,7 @@ model_size_y = 224
 
 
 def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, running_queue):
+    draw_on_frame = True
     trans = Transform.Transform(0, layer_name)
     counter = Counter.Counter(direction)  # or 'right'
     PERSON = 15
@@ -87,7 +88,7 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
 
                     # display the prediction
                     # label = "{}: {:.2f}%".format(PERSON_STRING, confidence * 100)
-                    if not gui:
+                    if not draw_on_frame:
                         cv2.rectangle(frame, (startX, startY), (endX, endY), GREEN_COLOR, 2)
                     # y = startY - 15 if startY - 15 > 15 else startY + 15
                     # cv2.putText(frame, label, (startX, y),
@@ -113,7 +114,7 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
                                 # label = "cx%d cy%d time: %d" % (cx, cy, p.getLastTime())
                                 # cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, GREEN_COLOR, 2)
                                 posture_id = '%d' % p.getId()
-                                if not gui:
+                                if not draw_on_frame:
                                     cv2.putText(frame, posture_id, (cx + 2, cy),
                                                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, GREEN_COLOR, 2)
 
@@ -157,14 +158,16 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
                             #     trans.build_tree(persons)
                             pid += 1
 
-                        if not gui:
+                        if not draw_on_frame:
                             cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
 
             if gui:
                 counter_queue.put(counter)
             else:
                 frame = write_result_on_frame(counter=counter, frame=frame, font=font, line_right=line_right,
-                                              line_left=line_left, left_limit=left_limit, right_limit=right_limit, h=h)
+                                              line_left=line_left, left_limit=left_limit, right_limit=right_limit,
+                                              h=h)
+
                 for i in postures:
                     cv2.putText(frame, str(i.getId()), (i.getX(), i.getY()), font, 0.3, i.getRGB(), 1, cv2.LINE_AA)
 
