@@ -30,8 +30,6 @@ class Transform:
         # tensorflow.keras.backend.clear_session()
         clear_session()
         self.base_model = VGG19(weights='imagenet')
-        self.fdsa = VGG19(weights='imagenet')
-        # self.base_model = ResNet50(weights='imagenet')
         self.model = Model(inputs=self.base_model.input, outputs=self.base_model.get_layer(layer_name).output)
         self.treeIn = []  # for deciding about person who's coming in
         self.treeOut = []  # for deciding about person who's coming out
