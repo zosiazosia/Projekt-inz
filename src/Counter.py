@@ -8,6 +8,7 @@ class Counter:
         self.inDirection = inDir  # 'left or 'right'
         self.regular_left = 0
         self.regular_right = 0
+        self.error_information = " "
 
     def come_in(self):
         self.came_in += 1
@@ -49,10 +50,9 @@ class Counter:
     def getRegularLeftString(self):
         return str(self.regular_left)
 
-    def generate_report(self):
+    def generate_report(self, type):
         info = "came_in: " + self.getCameInString() + ", came_out: " + self.getCameOutString() + ", reid_in: " + \
                self.getReidentInString() + ", reid_out: " + self.getReidentOutString() + ", inside: " + self.getAreInsideString()
-
         report_eng = "Regular counter information: \n %s has come in and %s people has come out. \n" \
                      "Intelligent counter information: \n " \
                  "%s has been reidentified coming in and  %  has been reidentified coming out. " \
@@ -67,7 +67,12 @@ class Counter:
                     % (self.getCameInString(), self.getCameOutString(), self.getReidentInString(),
                        self.getReidentOutString(), self.getAreInsideString())
 
-        return report_eng
+        if type == 'eng':
+            report = report_eng
+        else:
+            report = report_pl
+
+        return report
 
     def increase_regular_left(self):
         self.regular_left += 1

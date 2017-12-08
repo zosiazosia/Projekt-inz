@@ -1,3 +1,4 @@
+import codecs
 import os
 import queue
 import sys
@@ -123,15 +124,16 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
             self.reident_in.setText(self.counter_state.getReidentInString())
             self.reident_out.setText(self.counter_state.getReidentOutString())
             self.inside.setText(self.counter_state.getAreInsideString())
+            self.info.setText(self.counter_state.error_information)
 
     def export_report(self):
         filename = '../reports/report.txt'
 
         if not os.path.exists('../reports'):
             os.makedirs('../reports')
-        report_content = self.counter_state.generate_report()
+        report_content = self.counter_state.generate_report('pl')
 
-        with open(filename, "w+") as f:
+        with codecs.open(filename, 'w+', encoding='utf-8') as f:
             f.write(report_content)
             f.close()
 
