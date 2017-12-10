@@ -128,9 +128,7 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
                                         vector = trans.transform(imgT)
                                         p.addVector(vector)
                                     except:
-                                        print("Unexpected error:", sys.exc_info()[0])
-
-                                # cv2.imwrite("../out/person%d-%d.png" % (posture_id, img_counter), img)
+                                        print("")
 
                                 new = False
 
