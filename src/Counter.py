@@ -6,6 +6,8 @@ class Counter:
         self.reident_out = 0
         self.are_inside = 0
         self.inDirection = inDir  # 'left or 'right'
+        self.regular_left = 0
+        self.regular_right = 0
 
     def come_in(self):
         self.came_in += 1
@@ -23,25 +25,52 @@ class Counter:
         self.reident_out += 1
         self.are_inside -= 1
 
-    def getCameIn(self):
-        return self.came_in
+    def getCameInString(self):
+        return str(self.came_in)
 
-    def getCameOut(self):
-        return self.came_out
+    def getCameOutString(self):
+        return str(self.came_out)
 
-    def getReidentIn(self):
-        return self.reident_in
+    def getReidentInString(self):
+        return str(self.reident_in)
 
-    def getReidentOut(self):
-        return self.reident_out
+    def getReidentOutString(self):
+        return str(self.reident_out)
 
-    def getAreInside(self):
-        return self.are_inside
+    def getAreInsideString(self):
+        return str(self.are_inside)
 
-    def getInDirection(self):
+    def getInDirectionString(self):
         return self.inDirection
 
+    def getRegularRightString(self):
+        return str(self.regular_right)
+
+    def getRegularLeftString(self):
+        return str(self.regular_left)
+
     def generate_report(self):
-        info = "came_in: " + str(self.getCameIn()) + ", came_out: " + str(self.getCameOut()) + ", reid_in: " + str(
-            self.getReidentIn()) + ", reid_out: " + str(self.getReidentOut()) + ", inside: " + str(self.getAreInside())
-        return info
+        info = "came_in: " + self.getCameInString() + ", came_out: " + self.getCameOutString() + ", reid_in: " + \
+               self.getReidentInString() + ", reid_out: " + self.getReidentOutString() + ", inside: " + self.getAreInsideString()
+
+        report_eng = "Regular counter information: \n %s has come in and %s people has come out. \n" \
+                     "Intelligent counter information: \n " \
+                 "%s has been reidentified coming in and  %  has been reidentified coming out. " \
+                 "Currently there are %s people inside. " \
+                     % (self.getCameInString(), self.getCameOutString(), self.getReidentInString(),
+                    self.getReidentOutString(), self.getAreInsideString())
+
+        report_pl = "Tradycyjny licznik osób: \n %s osób weszło oraz %s osób wyszło. \n\n" \
+                    "Inteligentny licznik osób: \n " \
+                    "%s osób zostało zreidentyfikowanych wchodząc oraz %s osób zostało zreidentyfikowanych wychodząc. " \
+                    "Obecnie w środku znajduje się %s osób. " \
+                    % (self.getCameInString(), self.getCameOutString(), self.getReidentInString(),
+                       self.getReidentOutString(), self.getAreInsideString())
+
+        return report_pl
+
+    def increase_regular_left(self):
+        self.regular_left += 1
+
+    def increase_regular_right(self):
+        self.regular_right += 1

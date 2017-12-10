@@ -63,12 +63,12 @@ class Posture:
     def going_IN(self, line_left, line_right, counter):
         if len(self.tracks) >= 3:
             if self.state == '0':
-                if counter.getInDirection() == 'left':
+                if counter.getInDirectionString() == 'left':
                     if (self.tracks[-1][0] < line_right and self.tracks[-2][0] >= line_right):
                         self.state = '1'
                         self.dir = 'in'
                         return True
-                elif counter.getInDirection() == 'right':
+                elif counter.getInDirectionString() == 'right':
                     if (self.tracks[-1][0] > line_left and self.tracks[-2][0] <= line_left):
                         self.state = '1'
                         self.dir = 'in'
@@ -81,12 +81,12 @@ class Posture:
     def going_OUT(self, line_left, line_right, counter):
         if len(self.tracks) >= 3:
             if self.state == '0':
-                if counter.getInDirection() == 'left':
+                if counter.getInDirectionString() == 'left':
                     if (self.tracks[-1][0] > line_left and self.tracks[-2][0] <= line_left):
                         self.state = '1'
                         self.dir = 'out'
                         return True
-                elif counter.getInDirection() == 'right':
+                elif counter.getInDirectionString() == 'right':
                     if (self.tracks[-1][0] < line_right and self.tracks[-2][0] >= line_right):
                         self.state = '1'
                         self.dir = 'out'
