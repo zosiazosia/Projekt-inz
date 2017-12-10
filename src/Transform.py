@@ -30,8 +30,6 @@ class Transform:
         # tensorflow.keras.backend.clear_session()
         clear_session()
         self.base_model = VGG19(weights='imagenet')
-        self.fdsa = VGG19(weights='imagenet')
-        # self.base_model = ResNet50(weights='imagenet')
         self.model = Model(inputs=self.base_model.input, outputs=self.base_model.get_layer(layer_name).output)
         self.treeIn = []  # for deciding about person who's coming in
         self.treeOut = []  # for deciding about person who's coming out
@@ -123,6 +121,7 @@ class Transform:
 
         else:
             if (len(self.personsIn) == 0):
+                counter.error_information = "Wykryto osobę wychodzącą pomimo, że pomieszczenie jest puste. "
                 print("nie może wychodzić, nikogo nie ma w środku :D")
             else:
                 self.build_treeOut()
