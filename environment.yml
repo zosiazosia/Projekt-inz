@@ -1,4 +1,4 @@
-name: new
+name: tensorflow-env
 channels:
 - conda-forge
 - bioninja
@@ -73,5 +73,4 @@ dependencies:
   - pyinstaller==3.3
   - pypiwin32==220
   - win-inet-pton==1.0.1
-prefix: C:\Users\zosiarytlewska\Anaconda3\envs\new
 
