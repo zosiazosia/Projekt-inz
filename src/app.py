@@ -133,13 +133,11 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
                                 p.addCoords(cx, cy)
                                 if p.going_IN(line_left, line_right, counter):
                                     trans.classify(p, counter)
-                                    counter.increase_regular_left()
-                                    print("ID:", p.getId(), 'crossed going left at', time.strftime("%c"))
+                                    print("ID:", p.getId(), 'crossed going in at', time.strftime("%c"))
 
                                 elif p.going_OUT(line_left, line_right, counter):
                                     trans.classify(p, counter)
-                                    counter.increase_regular_right()
-                                    print("ID:", p.getId(), 'crossed going right at', time.strftime("%c"))
+                                    print("ID:", p.getId(), 'crossed going out at', time.strftime("%c"))
 
                                 break
 
@@ -151,10 +149,6 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
                         if new:
                             post = Posture.Posture(pid, cx, cy)
                             postures.append(post)
-
-                            # rebuild tree -> new posture has to be classified
-                            # if len(persons) != 0:
-                            #     trans.build_tree(persons)
                             pid += 1
 
                         if not gui:
@@ -189,8 +183,8 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
 
     logger = logging.getLogger('recognition')
     logger.setLevel(logging.INFO)
-    logger.info(counter.generate_report('eng') + "cnt_left: " + counter.getRegularLeftString()
-                + "cnt_right: " + counter.getRegularRightString())
+    logger.info(counter.generate_report('eng') + "cnt_in: " + counter.getRegularInString()
+                + "cnt_out: " + counter.getRegularOutString())
     cap.release()
     cv2.destroyAllWindows()
 
@@ -224,24 +218,17 @@ def write_result_on_frame(counter, frame, font, line_right, line_left, left_limi
     frame = cv2.polylines(frame, [pts_L3], False, (255, 255, 255), thickness=1)
     frame = cv2.polylines(frame, [pts_L4], False, (255, 255, 255), thickness=1)
 
-
-    str_up = 'LEFT: ' + counter.getRegularLeftString()
-    str_down = 'RIGHT: ' + counter.getRegularRightString()
-    str_in = 'IN: ' + counter.getCameInString()
-    str_out = 'OUT: ' + counter.getCameOutString()
+    str_in = 'IN: ' + counter.getRegularInString()
+    str_out = 'OUT: ' + counter.getRegularOutString()
     str_rein = 'RE_IN: ' + counter.getReidentInString()
     str_reout = 'RE_OUT: ' + counter.getReidentOutString()
     str_inside = 'INSIDE: ' + counter.getAreInsideString()
 
-    cv2.putText(frame, str_up, (10, 40), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-    cv2.putText(frame, str_up, (10, 40), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-    cv2.putText(frame, str_down, (10, 70), font, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
-    cv2.putText(frame, str_down, (10, 70), font, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
-    cv2.putText(frame, str_in, (10, 100), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-    cv2.putText(frame, str_out, (10, 130), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-    cv2.putText(frame, str_rein, (10, 160), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-    cv2.putText(frame, str_reout, (10, 190), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-    cv2.putText(frame, str_inside, (10, 220), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+    cv2.putText(frame, str_in, (10, 40), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+    cv2.putText(frame, str_out, (10, 70), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+    cv2.putText(frame, str_rein, (10, 100), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+    cv2.putText(frame, str_reout, (10, 130), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+    cv2.putText(frame, str_inside, (10, 160), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
     return frame
 
 

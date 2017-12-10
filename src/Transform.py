@@ -5,8 +5,6 @@ from keras.applications.vgg19 import VGG19
 from keras.backend import clear_session
 from keras.preprocessing import image
 from keras.applications.vgg19 import preprocess_input
-from keras.applications.resnet50 import preprocess_input, decode_predictions
-from keras.applications.resnet50 import ResNet50
 from keras.models import Model
 import numpy as np
 import Person
@@ -22,8 +20,6 @@ formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 
-
-
 class Transform:
     def __init__(self, id, layer_name):
         self.id = id
@@ -37,7 +33,7 @@ class Transform:
         self.indexesOut = []
         self.personsIn = []
         self.personsOut = []
-        self.distThreshold = 2200  #threshold to decide if it is a new person
+        self.distThreshold = 465  # potem 570 #threshold to decide if it is a new person, depends on dataset
         self.logger = logging.getLogger('recognition')
         self.logger.setLevel(logging.INFO)
         logger.info("layer_name: %s", layer_name)
@@ -47,23 +43,15 @@ class Transform:
         x = np.expand_dims(x, axis=0)
         x = preprocess_input(x)
 
-        # wektor 'a' ma wymiary 1:14:14:512
+        # vector 'a' is size 1:14:14:512 for 'block5_conv2' layer
         a = self.model.predict(x)
 
-        # wektor 'ret1' to wersja podstawowa - skumulowanie
-        # czterowymiarowego wektora x do jednowymiarowego, o wymiarze 512
-        ret1 = ((a.sum(axis=0)).mean(axis=0)).mean(axis=0)
-
-        # wektor 'ret' to wersja przy podziale wektora x na 3 czesci, rozmiar 512*3 = 1536
+        # vector 'ret'  - divides 'a' into three parts and then join them (final size - 1536)
         up = (a[0][0:4].mean(axis=0)).mean(axis=0)
         mid = (a[0][4:10].mean(axis=0)).mean(axis=0)
         down = (a[0][10:14].mean(axis=0)).mean(axis=0)
         ret = np.concatenate((up, mid, down), axis=0)
-        # wektor 'ret2' to wersja druga podziału wektora x na 3 części, rozmiar 512*3 = 1536
-        up2 = ((a[0].mean(axis=0))[0:4]).mean(axis=0)
-        mid2 = ((a[0].mean(axis=0))[4:10]).mean(axis=0)
-        down2 = ((a[0].mean(axis=0))[10:14]).mean(axis=0)
-        ret2 = np.concatenate((up2, mid2, down2), axis=0)
+
         return ret
 
     # build tree from persons who are outside vectors
@@ -97,20 +85,17 @@ class Transform:
 
     def classify(self, posture, counter):
         if posture.getDir() == 'in':
-            if (len(self.personsOut) == 0):  # no need for building a tree here
+            counter.increase_regular_in()
+            if len(self.personsOut) == 0:  # no need for building a tree here
                 ps = Person.Person(len(self.personsIn))
-                print("no outside")
-                counter.come_in()
+                print("coming in as new ", ps.getId())
             else:
                 self.build_treeIn()
                 pers = self.tree_decide(posture.getVectors(), 'in')
-                print(pers)
-                if (pers == 'new'):
-                    ps = Person.Person(len(self.personsIn))
-                    print("new person, but somebody is already outside")
-                    counter.come_in()
-                # change person localisation
-                else:
+                if pers == 'new':
+                    ps = Person.Person(len(self.personsIn) + len(self.personsOut))
+                    print("coming in as new ", ps.getId())
+                else:  # change person localisation
                     i = self.getIndexByPid(pers, self.personsOut)
                     ps = self.personsOut.pop(i)
                     print("coming in reidentified as ", ps.getId())
@@ -120,18 +105,22 @@ class Transform:
             ps.addVectors(posture.getVectors())
 
         else:
-            if (len(self.personsIn) == 0):
+            counter.increase_regular_out()
+            if len(self.personsIn) == 0:
                 counter.error_information = "Wykryto osobę wychodzącą pomimo, że pomieszczenie jest puste. "
                 print("nie może wychodzić, nikogo nie ma w środku :D")
             else:
                 self.build_treeOut()
                 pers = self.tree_decide(posture.getVectors(), 'out')
-                print(pers)
-                i = self.getIndexByPid(pers, self.personsIn)
-                ps = self.personsIn.pop(i)
-                print("coming out reidentified as ", ps.getId())
-                self.logger.info('out %s', str(ps.getId()))
-                counter.reid_out()
+                if pers == 'new':
+                    ps = Person.Person(len(self.personsIn) + len(self.personsOut))
+                    print("coming out as new ", ps.getId())
+                else:  # change person localisation
+                    i = self.getIndexByPid(pers, self.personsIn)
+                    ps = self.personsIn.pop(i)
+                    print("coming out reidentified as ", ps.getId())
+                    self.logger.info('out %s', str(ps.getId()))
+                    counter.reid_out()
                 self.personsOut.append(ps)
                 ps.addVectors(posture.getVectors())
 
@@ -146,7 +135,7 @@ class Transform:
             indexes = self.indexesOut
 
         return self.mostFreqNearest(vectors, tree, indexes, direction)
-        # return self.kMultiplyDistance(vectors, tree, indexes, direction, 5)
+        #return self.kMultiplyDistance(vectors, tree, indexes, direction, 5)
 
     def mostFreqNearest(self, vectors, tree, indexes, direction):
         # print("decyzja dla osoby")
@@ -161,17 +150,17 @@ class Transform:
 
             # to potem do usunięcia - tylko w celach testowych
             # dist - odległość, ind - określenie miejsca w drzewie, indexes określają id osoby do której przynależy wektor
-                # print(dist, ind)
-                # for i in ind:
-                #     try:
-                #         print(indexes[i])
-                #     except:
-                #         print("Not so many vectors in tree:", sys.exc_info()[0])
+            print(dist, ind)
+            for i in ind:
+                try:
+                    print(indexes[i])
+                except:
+                    print("Not so many vectors in tree:", sys.exc_info()[0])
 
         # new person coming in
-        if direction == 'in':
-            if minD == self.distThreshold:
-                return "new"
+        # if direction == 'in':
+        if minD == self.distThreshold:
+            return "new"
 
         # print("najczęściej ", self.mostFrequent(nearests))
         return self.mostFrequent(nearests)
@@ -203,16 +192,16 @@ class Transform:
                 #         print("Not so many vectors in tree:", sys.exc_info()[0])
 
         # new person coming in
-        if direction == 'in':
-            if minD == self.distThreshold:
-                return "new"
+        # if direction == 'in':
+        if minD == self.distThreshold:
+            return "new"
 
         for key, value in dictN.items():
             dictN[key] = value[0] / value[1]
-        # print("średnie ", dictN)
+        #print("średnie ", dictN)
         nearest = sorted(dictN.items(), key=operator.itemgetter(1))[0][0]
 
-        # print("najmniejsza średnia: ", nearest)
+        #print("najmniejsza średnia: ", nearest)
         return nearest
 
     def mostFrequent(self, nearests):

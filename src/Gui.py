@@ -1,4 +1,3 @@
-import codecs
 import os
 import queue
 import sys
@@ -119,21 +118,20 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
 
         if not self.counter_queue.empty():
             self.counter_state = self.counter_queue.get()
-            self.counted_in.setText(self.counter_state.getRegularLeftString())
-            self.counted_out.setText(self.counter_state.getRegularRightString())
+            self.counted_in.setText(self.counter_state.getRegularInString())
+            self.counted_out.setText(self.counter_state.getRegularOutString())
             self.reident_in.setText(self.counter_state.getReidentInString())
             self.reident_out.setText(self.counter_state.getReidentOutString())
             self.inside.setText(self.counter_state.getAreInsideString())
-            self.info.setText(self.counter_state.error_information)
 
     def export_report(self):
         filename = '../reports/report.txt'
 
         if not os.path.exists('../reports'):
             os.makedirs('../reports')
-        report_content = self.counter_state.generate_report('pl')
+        report_content = self.counter_state.generate_report()
 
-        with codecs.open(filename, 'w+', encoding='utf-8') as f:
+        with open(filename, "w+") as f:
             f.write(report_content)
             f.close()
 
