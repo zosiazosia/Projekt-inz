@@ -183,7 +183,7 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
 
     logger = logging.getLogger('recognition')
     logger.setLevel(logging.INFO)
-    logger.info(counter.generate_report() + "cnt_in: " + counter.getRegularInString()
+    logger.info(counter.generate_report('eng') + "cnt_in: " + counter.getRegularInString()
                 + "cnt_out: " + counter.getRegularOutString())
     cap.release()
     cv2.destroyAllWindows()

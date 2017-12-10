@@ -4,6 +4,7 @@ class Counter:
         self.reident_out = 0
         self.are_inside = 0
         self.inDirection = inDir  # 'left or 'right'
+        self.error_information = " "
         self.regular_in = 0
         self.regular_out = 0
 
@@ -31,7 +32,7 @@ class Counter:
     def getRegularOutString(self):
         return str(self.regular_out)
 
-    def generate_report(self):
+    def generate_report(self, type):
         info = "came_in: " + self.getRegularInString() + ", came_out: " + self.getRegularOutString() + ", reid_in: " + \
                self.getReidentInString() + ", reid_out: " + self.getReidentOutString() + ", inside: " + self.getAreInsideString()
 
@@ -49,7 +50,12 @@ class Counter:
                     % (self.getRegularInString(), self.getRegularOutString(), self.getReidentInString(),
                        self.getReidentOutString(), self.getAreInsideString())
 
-        return report_pl
+        if type == 'eng':
+            report = report_eng
+        else:
+            report = report_pl
+
+        return report
 
     def increase_regular_in(self):
         self.regular_in += 1

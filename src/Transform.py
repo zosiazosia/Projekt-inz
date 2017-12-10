@@ -107,6 +107,7 @@ class Transform:
         else:
             counter.increase_regular_out()
             if len(self.personsIn) == 0:
+                counter.error_information = "Wykryto osobę wychodzącą pomimo, że pomieszczenie jest puste. "
                 print("nie może wychodzić, nikogo nie ma w środku :D")
             else:
                 self.build_treeOut()
