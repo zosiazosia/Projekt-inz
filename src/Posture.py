@@ -1,8 +1,12 @@
 from random import randint
 import time
 import Counter
+from enum import Enum
 
 
+class state(Enum):
+    COUNTED = 0
+    NOTCOUNTED = 1
 class Posture:
     tracks = []
 
@@ -14,7 +18,7 @@ class Posture:
         self.R = randint(0, 255)
         self.G = randint(0, 255)
         self.B = randint(0, 255)
-        self.state = '0'
+        self.state = state.NOTCOUNTED
         self.dir = None
         self.lastTime = int(time.strftime("%M%S"))
         self.vectors = []
@@ -62,15 +66,15 @@ class Posture:
 
     def going_IN(self, line_left, line_right, counter):
         if len(self.tracks) >= 3:
-            if self.state == '0':
+            if self.state == state.NOTCOUNTED:
                 if counter.getInDirectionString() == 'left':
                     if (self.tracks[-1][0] < line_right and self.tracks[-2][0] >= line_right):
-                        self.state = '1'
+                        self.state = state.COUNTED
                         self.dir = 'in'
                         return True
                 elif counter.getInDirectionString() == 'right':
                     if (self.tracks[-1][0] > line_left and self.tracks[-2][0] <= line_left):
-                        self.state = '1'
+                        self.state = state.COUNTED
                         self.dir = 'in'
                         return True
             else:
@@ -80,15 +84,15 @@ class Posture:
 
     def going_OUT(self, line_left, line_right, counter):
         if len(self.tracks) >= 3:
-            if self.state == '0':
+            if self.state == state.NOTCOUNTED:
                 if counter.getInDirectionString() == 'left':
                     if (self.tracks[-1][0] > line_left and self.tracks[-2][0] <= line_left):
-                        self.state = '1'
+                        self.state = state.COUNTED
                         self.dir = 'out'
                         return True
                 elif counter.getInDirectionString() == 'right':
                     if (self.tracks[-1][0] < line_right and self.tracks[-2][0] >= line_right):
-                        self.state = '1'
+                        self.state = state.COUNTED
                         self.dir = 'out'
                         return True
             else:

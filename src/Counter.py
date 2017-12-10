@@ -1,3 +1,10 @@
+from enum import Enum
+
+
+class direction(Enum):
+    LEFT = 'left'
+    RIGHT = 'right'
+
 class Counter:
     def __init__(self, inDir):
         self.reident_in = 0

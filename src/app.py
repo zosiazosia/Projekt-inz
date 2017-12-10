@@ -10,13 +10,17 @@ import Transform
 import Counter
 import Posture
 import sys
-
+from enum import Enum
 running = True
 
 # known direction, posture to classify
 model_size_x = 224
 model_size_y = 224
 
+
+class direction(Enum):
+    LEFT = 'left'
+    RIGHT = 'right'
 
 def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, running_queue):
     trans = Transform.Transform(0, layer_name)
@@ -118,7 +122,7 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
                                                 cv2.FONT_HERSHEY_SIMPLEX, 1.5, GREEN_COLOR, 2)
 
                                 # if posture is not yet counted and has not more than 10 vectors
-                                if p.getState() != '1' and len(p.getVectors()) < 10:
+                                if p.getState() != Posture.state.COUNTED and len(p.getVectors()) < 10:
                                     try:
                                         imgT = cv2.resize(img, (model_size_x, model_size_y))
                                         vector = trans.transform(imgT)
@@ -142,7 +146,7 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
                                 break
 
                             # posture outside white space
-                            if p.getState() == "1" or p.getX() > right_limit or p.getX() < left_limit:
+                            if p.getState() == Posture.state.COUNTED or p.getX() > right_limit or p.getX() < left_limit:
                                 index = postures.index(p)
                                 postures.pop(index)
                                 del p
@@ -234,5 +238,5 @@ def write_result_on_frame(counter, frame, font, line_right, line_left, left_limi
 
 if __name__ == '__main__':
     run_video_counter(cam='../mov/Sekcja_2.mov', queue=queue.Queue(), gui=False,
-                      layer_name='block5_conv2', direction='left', counter_queue=queue.Queue(),
+                      layer_name='block5_conv2', direction=direction.LEFT, counter_queue=queue.Queue(),
                       running_queue=queue.Queue())
