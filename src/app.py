@@ -44,9 +44,6 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
     left_limit = int(1 * (w / 5))
     right_limit = int(4 * (w / 5))
 
-
-
-
     # Variables
     font = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -63,11 +60,6 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
     while running:
         ret, frame = cap.read()
         if ret:
-            # co druga ramka
-            #  frame_num += 1
-            #  if frame_num % 2:
-            #      continue
-
             # save height and width of a frame
             (h1, w1) = frame.shape[:2]
             blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 0.007843, (300, 300), 127.5)
