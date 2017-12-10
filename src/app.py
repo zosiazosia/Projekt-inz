@@ -62,7 +62,9 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
         if ret:
             # save height and width of a frame
             (h1, w1) = frame.shape[:2]
+            # read frame
             blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 0.007843, (300, 300), 127.5)
+            # find detections on frame
             net.setInput(blob)
             detections = net.forward()
 
@@ -98,13 +100,13 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
                     if cx in range(left_limit, right_limit):
                         # loop over active postures
                         for p in postures:
-
+                            # actual time
                             now = int(time.strftime('%M%S'))
-
+                            # compare coords and time with others to find out which person it is
                             if abs(cx - p.getX()) <= w / 5 and abs(cy - p.getY()) <= h / 4 \
                                     and (abs(now - int(p.getLastTime())) <= 4 or abs(
                                             now - int(p.getLastTime())) >= 5955):
-
+                                # image of only this person
                                 img = frame[startY:endY, startX:endX]
                                 # label = "cx%d cy%d time: %d" % (cx, cy, p.getLastTime())
                                 # cv2.putText(img, label, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, GREEN_COLOR, 2)
@@ -125,6 +127,7 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
                                 new = False
 
                                 p.addCoords(cx, cy)
+                                # classify person and decide about direction
                                 if p.going_IN(line_left, line_right, counter):
                                     trans.classify(p, counter)
                                     print("ID:", p.getId(), 'crossed going in at', time.strftime("%c"))
@@ -140,6 +143,7 @@ def run_video_counter(cam, queue, gui, layer_name, direction, counter_queue, run
                                 index = postures.index(p)
                                 postures.pop(index)
                                 del p
+                        # if person is new
                         if new:
                             post = Posture.Posture(pid, cx, cy)
                             postures.append(post)
