@@ -23,7 +23,6 @@ logger.addHandler(hdlr)
 class Transform:
     def __init__(self, id, layer_name):
         self.id = id
-        # tensorflow.keras.backend.clear_session()
         clear_session()
         self.base_model = VGG19(weights='imagenet')
         self.model = Model(inputs=self.base_model.input, outputs=self.base_model.get_layer(layer_name).output)
@@ -33,7 +32,7 @@ class Transform:
         self.indexesOut = []
         self.personsIn = []
         self.personsOut = []
-        self.distThreshold = 465  # potem 570 #threshold to decide if it is a new person, depends on dataset
+        self.distThreshold = 465  # threshold to decide if it is a new person, depends on dataset!
         self.logger = logging.getLogger('recognition')
         self.logger.setLevel(logging.INFO)
         logger.info("layer_name: %s", layer_name)
@@ -108,7 +107,6 @@ class Transform:
             counter.increase_regular_out()
             if len(self.personsIn) == 0:
                 counter.error_information = "Wykryto osobę wychodzącą pomimo, że pomieszczenie jest puste. "
-                print("nie może wychodzić, nikogo nie ma w środku :D")
             else:
                 self.build_treeOut()
                 pers = self.tree_decide(posture.getVectors(), 'out')
@@ -134,11 +132,11 @@ class Transform:
             tree = self.treeOut
             indexes = self.indexesOut
 
-        return self.mostFreqNearest(vectors, tree, indexes, direction)
-        #return self.kMultiplyDistance(vectors, tree, indexes, direction, 5)
+        # different functions for deciding about which person is the most similar
+        return self.mostFreqNearest(vectors, tree, indexes)
+        # return self.kMultiplyDistance(vectors, tree, indexes, 5)
 
-    def mostFreqNearest(self, vectors, tree, indexes, direction):
-        # print("decyzja dla osoby")
+    def mostFreqNearest(self, vectors, tree, indexes):
         nearests = []
         minD = self.distThreshold
         for vector in vectors:
@@ -148,27 +146,14 @@ class Transform:
             if dist[0] < minD:
                 minD = dist[0]
 
-            # to potem do usunięcia - tylko w celach testowych
-            # dist - odległość, ind - określenie miejsca w drzewie, indexes określają id osoby do której przynależy wektor
-            print(dist, ind)
-            for i in ind:
-                try:
-                    print(indexes[i])
-                except:
-                    print("Not so many vectors in tree:", sys.exc_info()[0])
-
-        # new person coming in
-        # if direction == 'in':
+        # not similar enough to anyone identified before
         if minD == self.distThreshold:
             return "new"
 
-        # print("najczęściej ", self.mostFrequent(nearests))
         return self.mostFrequent(nearests)
 
-    def kMultiplyDistance(self, vectors, tree, indexes, direction, k):
+    def kMultiplyDistance(self, vectors, tree, indexes, k):
 
-        # print("decyzja dla osoby")
-        nearests = []
         dictN = {}
         minD = self.distThreshold
         for vector in vectors:
@@ -182,26 +167,14 @@ class Transform:
             if dist[0] < minD:
                 minD = dist[0]
 
-            # to potem do usunięcia - tylko w celach testowych
-            # dist - odległość, ind - określenie miejsca w drzewie, indexes określają id osoby do której przynależy wektor
-                # print(dist, ind)
-                # for i in ind:
-                #     try:
-                #         print(indexes[i])
-                #     except:
-                #         print("Not so many vectors in tree:", sys.exc_info()[0])
-
-        # new person coming in
-        # if direction == 'in':
+        # not similar enough to anyone identified before
         if minD == self.distThreshold:
             return "new"
 
         for key, value in dictN.items():
             dictN[key] = value[0] / value[1]
-        #print("średnie ", dictN)
         nearest = sorted(dictN.items(), key=operator.itemgetter(1))[0][0]
 
-        #print("najmniejsza średnia: ", nearest)
         return nearest
 
     def mostFrequent(self, nearests):
