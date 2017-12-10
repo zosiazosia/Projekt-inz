@@ -1,5 +1,10 @@
 # zmirlacz
+Katarzyna Gałka, Katarzyna Retowska, Zofia Rytlewska
+
 Projekt inżynierski "Inteligentny licznik osób"
+https://github.com/zosiazosia/zmirlacz
+
+
 
 Aktualnie przyjęty kierunek wejścia - w lewo. W celu zmiany kierunku wejścia należy przy tworzeniu obiektu counter podać w nawiasie 'right'
 Przyjęto założenie, że pomieszczenie przed rozpoczęciem zliczania jest puste

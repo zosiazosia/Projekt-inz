@@ -80,8 +80,9 @@ class MainWindow(QtWidgets.QMainWindow, form_class):
             self.capture_thread = None
             self.capture_thread = threading.Thread(target=run_video_counter,
                                               args=(
-                                              '../mov/Sekcja_2.mov', frame_queue, video_width, video_height, 30, True,
-                                              'block4_pool'))
+                                                  '../mov/Sekcja_2.mov', self.frame_queue, True,
+                                                  'block5_conv2', self.count_direction, self.counter_queue,
+                                                  self.running_queue))
 
             self.capture_thread.start()
 
